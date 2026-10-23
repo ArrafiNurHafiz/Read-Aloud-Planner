@@ -1,0 +1,7 @@
+{
+  "buildCommand": "npm run build:frontend",
+  "outputDirectory": "dist-frontend",
+  "rewrites": [
+    { "source": "/help", "destination": "/help.html" }
+  ]
+}

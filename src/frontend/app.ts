@@ -1,6 +1,59 @@
 import { announce } from './a11y.js';
 import { SpeechCoordinator } from './speech.js';
 
+export function playEarcon(type: 'tap' | 'success' | 'warning' | 'alert') {
+  try {
+    if (typeof window === 'undefined') return;
+    const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
+    if (!AudioContextClass) return;
+    const ctx = new AudioContextClass();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+
+    const now = ctx.currentTime;
+    if (type === 'tap') {
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(440, now);
+      gain.gain.setValueAtTime(0.1, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.08);
+      osc.start(now);
+      osc.stop(now + 0.08);
+    } else if (type === 'success') {
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(587.33, now);
+      osc.frequency.setValueAtTime(880, now + 0.1);
+      gain.gain.setValueAtTime(0.15, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
+      osc.start(now);
+      osc.stop(now + 0.25);
+    } else if (type === 'warning') {
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(329.63, now);
+      gain.gain.setValueAtTime(0.12, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
+      osc.start(now);
+      osc.stop(now + 0.15);
+    } else if (type === 'alert') {
+      osc.type = 'square';
+      osc.frequency.setValueAtTime(220, now);
+      gain.gain.setValueAtTime(0.15, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.2);
+      osc.start(now);
+      osc.stop(now + 0.2);
+    }
+
+    if ('vibrate' in navigator) {
+      if (type === 'tap') navigator.vibrate(20);
+      else if (type === 'success') navigator.vibrate([30, 50, 40]);
+      else if (type === 'warning' || type === 'alert') navigator.vibrate([60, 40, 60]);
+    }
+  } catch {
+    // Ignore audio context autoplay restrictions
+  }
+}
+
 interface Activity {
   id: string;
   title: string;
@@ -149,29 +202,29 @@ async function toggleDone(id: string, newDone: boolean): Promise<void> {
     });
 
     if (res.ok) {
+      playEarcon(newDone ? 'success' : 'tap');
       announce(newDone ? 'Kegiatan ditandai selesai.' : 'Kegiatan ditandai belum selesai.');
       await loadActivities();
     } else {
+      playEarcon('alert');
       announce('Gagal memperbarui status kegiatan.', 'assertive');
     }
   } catch {
+    playEarcon('alert');
     announce('Kesalahan jaringan.', 'assertive');
   }
 }
 
-async function deleteActivity(id: string): Promise<void> {
-  if (confirm('Hapus kegiatan ini dari jadwal?')) {
-    try {
-      const res = await fetch(`/api/activities/${id}`, { method: 'DELETE' });
-      if (res.ok) {
-        announce('Kegiatan berhasil dihapus.');
-        await loadActivities();
-      } else {
-        announce('Gagal menghapus kegiatan.', 'assertive');
-      }
-    } catch {
-      announce('Kesalahan jaringan saat menghapus kegiatan.', 'assertive');
-    }
+let pendingDeleteId: string | null = null;
+
+function deleteActivity(id: string): void {
+  pendingDeleteId = id;
+  const dialog = document.getElementById('dialog-confirm-delete') as HTMLDialogElement | null;
+  if (dialog) {
+    playEarcon('warning');
+    dialog.showModal();
+    const btnCancel = document.getElementById('btn-confirm-delete-no');
+    if (btnCancel) btnCancel.focus();
   }
 }
 
@@ -216,7 +269,7 @@ function stopAllSpeech(): void {
 // Mode Fokus Logic
 function openFocusMode(): void {
   if (currentActivities.length === 0) {
-    alert('Tidak ada kegiatan untuk Mode Fokus.');
+    announce('Tidak ada kegiatan untuk Mode Fokus.', 'assertive');
     return;
   }
   focusIndex = 0;
@@ -342,7 +395,6 @@ document.addEventListener('DOMContentLoaded', () => {
       } else {
         const data = await res.json();
         announce(data.error || 'Login gagal.', 'assertive');
-        alert(data.error || 'Login gagal.');
       }
     } catch {
       announce('Kesalahan jaringan saat login.', 'assertive');
@@ -364,13 +416,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
       if (res.ok) {
         announce('Registrasi berhasil. Silakan masuk.');
-        alert('Registrasi berhasil. Silakan masuk.');
         if (formRegister) formRegister.style.display = 'none';
         if (formLogin) formLogin.style.display = 'block';
       } else {
         const data = await res.json();
         announce(data.error || 'Registrasi gagal.', 'assertive');
-        alert(data.error || 'Registrasi gagal.');
       }
     } catch {
       announce('Kesalahan jaringan saat registrasi.', 'assertive');
@@ -477,7 +527,6 @@ document.addEventListener('DOMContentLoaded', () => {
       } else {
         const data = await res.json();
         announce(data.error || 'Gagal menambahkan kegiatan.', 'assertive');
-        alert(data.error || 'Gagal menambahkan kegiatan.');
       }
     } catch {
       announce('Kesalahan jaringan.', 'assertive');
@@ -529,5 +578,35 @@ document.addEventListener('DOMContentLoaded', () => {
     const lang = selectLang.value;
     speech.setLanguage(lang);
     announce(lang === 'id-ID' ? 'Bahasa pembacaan diubah ke Indonesia.' : 'Speech language set to English.');
+  });
+
+  // Confirm delete dialog listeners
+  document.getElementById('btn-confirm-delete-yes')?.addEventListener('click', async () => {
+    const dialog = document.getElementById('dialog-confirm-delete') as HTMLDialogElement | null;
+    if (dialog) dialog.close();
+    if (!pendingDeleteId) return;
+    const id = pendingDeleteId;
+    pendingDeleteId = null;
+
+    try {
+      const res = await fetch(`/api/activities/${id}`, { method: 'DELETE' });
+      if (res.ok) {
+        playEarcon('success');
+        announce('Kegiatan berhasil dihapus.');
+        await loadActivities();
+      } else {
+        playEarcon('alert');
+        announce('Gagal menghapus kegiatan.', 'assertive');
+      }
+    } catch {
+      playEarcon('alert');
+      announce('Kesalahan jaringan saat menghapus kegiatan.', 'assertive');
+    }
+  });
+
+  document.getElementById('btn-confirm-delete-no')?.addEventListener('click', () => {
+    const dialog = document.getElementById('dialog-confirm-delete') as HTMLDialogElement | null;
+    if (dialog) dialog.close();
+    pendingDeleteId = null;
   });
 });

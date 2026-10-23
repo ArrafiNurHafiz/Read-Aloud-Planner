@@ -7,6 +7,11 @@
   <meta name="description" content="Perencana harian linear aksesibel untuk screen reader dan pembaca suara.">
   <link rel="stylesheet" href="/src/frontend/styles.css">
   <link rel="manifest" href="/manifest.webmanifest">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="ReadAloud">
+  <link rel="apple-touch-icon" href="/icon-192.png">
+  <meta name="theme-color" content="#0f172a">
 </head>
 <body>
   <!-- Skip Link for Keyboard Navigation -->
@@ -36,6 +41,7 @@
           <option value="en-US">Bahasa: Inggris</option>
         </select>
         <a href="/help.html" class="nav-link">Panduan Aksesibilitas</a>
+        <a href="/ReadAloudPlanner.apk" class="nav-link" download="ReadAloudPlanner.apk" aria-label="Unduh APK Android">Unduh APK</a>
         <button type="button" id="btn-logout" class="btn-secondary" style="display:none;">Keluar</button>
       </nav>
     </div>
@@ -166,6 +172,18 @@
         <div class="button-row">
           <button type="submit" class="btn-primary">Simpan Kegiatan</button>
           <button type="button" id="btn-cancel-add" class="btn-secondary">Batal (<kbd>Esc</kbd>)</button>
+        </div>
+      </form>
+    </dialog>
+
+    <!-- Accessible Confirmation Dialog -->
+    <dialog id="dialog-confirm-delete" aria-labelledby="dialog-confirm-title">
+      <form method="dialog" class="card" style="margin: 0; min-width: 300px;">
+        <h2 id="dialog-confirm-title">Konfirmasi Hapus</h2>
+        <p id="dialog-confirm-msg">Hapus kegiatan ini dari jadwal?</p>
+        <div class="button-row">
+          <button type="button" id="btn-confirm-delete-yes" class="btn-primary">Ya, Hapus</button>
+          <button type="button" id="btn-confirm-delete-no" class="btn-secondary">Batal (<kbd>Esc</kbd>)</button>
         </div>
       </form>
     </dialog>
