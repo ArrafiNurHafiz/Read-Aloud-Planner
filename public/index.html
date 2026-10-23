@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Read Aloud Planner — Jadwal yang Bisa Didengar</title>
+  <meta name="description" content="Perencana harian linear aksesibel untuk screen reader dan pembaca suara.">
+  <link rel="stylesheet" href="/src/frontend/styles.css">
+  <link rel="manifest" href="/manifest.webmanifest">
+</head>
+<body>
+  <!-- Skip Link for Keyboard Navigation -->
+  <a href="#main-content" class="skip-link">Lewati ke konten utama</a>
+
+  <!-- ARIA Live Regions for Assistive Technologies -->
+  <div id="live-polite" aria-live="polite" class="sr-only"></div>
+  <div id="live-assertive" aria-live="assertive" class="sr-only"></div>
+
+  <!-- Header Landmark -->
+  <header role="banner" class="app-header">
+    <div class="header-inner">
+      <h1>Read Aloud Planner</h1>
+      <nav aria-label="Navigasi Utama" class="nav-toolbar">
+        <button type="button" id="btn-toggle-contrast" aria-pressed="false" class="btn-secondary">Kontras Tinggi</button>
+        <button type="button" id="btn-font-size" aria-label="Ubah ukuran huruf" class="btn-secondary">Huruf: Sedang</button>
+        <label for="select-speech-rate" class="sr-only">Kecepatan Suara</label>
+        <select id="select-speech-rate" aria-label="Kecepatan Suara" class="btn-secondary">
+          <option value="0.75">Kecepatan: 0.75x</option>
+          <option value="1.0" selected>Kecepatan: 1.0x</option>
+          <option value="1.25">Kecepatan: 1.25x</option>
+          <option value="1.5">Kecepatan: 1.5x</option>
+        </select>
+        <label for="select-speech-lang" class="sr-only">Bahasa Pembacaan</label>
+        <select id="select-speech-lang" aria-label="Bahasa Pembacaan" class="btn-secondary">
+          <option value="id-ID" selected>Bahasa: Indonesia</option>
+          <option value="en-US">Bahasa: Inggris</option>
+        </select>
+        <a href="/help.html" class="nav-link">Panduan Aksesibilitas</a>
+        <button type="button" id="btn-logout" class="btn-secondary" style="display:none;">Keluar</button>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Main Content Landmark -->
+  <main id="main-content" role="main">
+    <!-- Auth Section (Visible when not logged in) -->
+    <section id="auth-section" aria-labelledby="auth-heading" class="card">
+      <h2 id="auth-heading">Masuk ke Akun Anda</h2>
+      
+      <!-- Login Form -->
+      <form id="form-login" novalidate>
+        <div class="form-group">
+          <label for="login-email">Alamat Email</label>
+          <input type="email" id="login-email" name="email" required autocomplete="email">
+        </div>
+        <div class="form-group">
+          <label for="login-password">Kata Sandi (minimal 12 karakter)</label>
+          <input type="password" id="login-password" name="password" required autocomplete="current-password">
+        </div>
+        <div class="button-row">
+          <button type="submit" class="btn-primary">Masuk</button>
+          <button type="button" id="btn-show-register" class="btn-secondary">Daftar Akun Baru</button>
+        </div>
+      </form>
+
+      <!-- Register Form (Initially Hidden) -->
+      <form id="form-register" style="display:none;" novalidate>
+        <div class="form-group">
+          <label for="reg-email">Alamat Email Baru</label>
+          <input type="email" id="reg-email" name="reg-email" required autocomplete="email">
+        </div>
+        <div class="form-group">
+          <label for="reg-password">Kata Sandi Baru (minimal 12 karakter)</label>
+          <input type="password" id="reg-password" name="reg-password" required autocomplete="new-password">
+        </div>
+        <div class="button-row">
+          <button type="submit" class="btn-primary">Daftar Sekarang</button>
+          <button type="button" id="btn-show-login" class="btn-secondary">Kembali ke Masuk</button>
+        </div>
+      </form>
+    </section>
+
+    <!-- Main Planner View (Visible when logged in) -->
+    <section id="planner-section" aria-labelledby="planner-heading" style="display:none;">
+      <div class="planner-toolbar">
+        <h2 id="planner-heading">Jadwal Hari Ini</h2>
+        <div class="date-selector">
+          <label for="input-date">Pilih Tanggal:</label>
+          <input type="date" id="input-date">
+        </div>
+      </div>
+
+      <!-- Linear Control Bar -->
+      <section aria-labelledby="controls-heading" class="controls-card">
+        <h3 id="controls-heading" class="sr-only">Kontrol Jadwal</h3>
+        <button type="button" id="btn-read-all" class="btn-primary" aria-keyshortcuts="S">
+          Bacakan Jadwal (<kbd>S</kbd>)
+        </button>
+        <button type="button" id="btn-stop-speech" class="btn-secondary" style="display:none;">
+          Berhenti Membaca
+        </button>
+        <button type="button" id="btn-focus-mode" class="btn-secondary">
+          Mode Fokus
+        </button>
+        <button type="button" id="btn-add-activity" class="btn-primary" aria-keyshortcuts="N">
+          Tambah Kegiatan (<kbd>N</kbd>)
+        </button>
+      </section>
+
+      <!-- Textual Fallback / Speech Subtitle Bar -->
+      <div id="speech-caption-container" class="caption-box" role="status" aria-label="Status Pembacaan Suara">
+        <p id="speech-caption-text">Siap membacakan jadwal.</p>
+      </div>
+
+      <!-- Linear Activities List -->
+      <section aria-labelledby="activities-list-heading">
+        <h3 id="activities-list-heading" class="sr-only">Daftar Kegiatan Linear</h3>
+        <ol id="activities-list" class="activity-linear-list">
+          <!-- Dynamically inserted li elements -->
+        </ol>
+      </section>
+    </section>
+
+    <!-- Focus Mode Overlay / View -->
+    <section id="focus-section" aria-modal="true" role="dialog" aria-labelledby="focus-title" class="focus-modal" style="display:none;">
+      <div id="focus-card" class="focus-card-body">
+        <h2 id="focus-title">Mode Fokus: Satu Kegiatan</h2>
+        <p id="focus-sentence" class="focus-sentence-text"></p>
+        <div class="focus-action-buttons">
+          <button type="button" id="btn-focus-prev" class="btn-secondary">Sebelumnya</button>
+          <button type="button" id="btn-focus-done" class="btn-primary" aria-keyshortcuts="D">Tandai Selesai (<kbd>D</kbd>)</button>
+          <button type="button" id="btn-focus-next" class="btn-secondary">Berikutnya</button>
+          <button type="button" id="btn-focus-exit" class="btn-secondary" aria-keyshortcuts="Escape">Keluar (<kbd>Esc</kbd>)</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Add Activity Dialog -->
+    <dialog id="dialog-add-activity" aria-labelledby="dialog-add-title">
+      <form id="form-add-activity" method="dialog">
+        <h2 id="dialog-add-title">Tambah Kegiatan Baru</h2>
+        <div class="form-group">
+          <label for="act-title">Nama Kegiatan</label>
+          <input type="text" id="act-title" name="title" required>
+        </div>
+        <div class="form-group">
+          <label for="act-date">Tanggal</label>
+          <input type="date" id="act-date" name="date" required>
+        </div>
+        <div class="form-group">
+          <label for="act-time">Jam Mulai</label>
+          <input type="time" id="act-time" name="time" required>
+        </div>
+        <div class="form-group">
+          <label for="act-duration">Durasi (dalam menit)</label>
+          <input type="number" id="act-duration" name="duration" min="5" step="5" value="60" required>
+        </div>
+        <div class="form-group">
+          <label for="act-location">Lokasi / Ruangan (Opsional)</label>
+          <input type="text" id="act-location" name="location">
+        </div>
+        <div class="form-group">
+          <label for="act-notes">Catatan Tambahan (Opsional)</label>
+          <textarea id="act-notes" name="notes" rows="3"></textarea>
+        </div>
+        <div class="button-row">
+          <button type="submit" class="btn-primary">Simpan Kegiatan</button>
+          <button type="button" id="btn-cancel-add" class="btn-secondary">Batal (<kbd>Esc</kbd>)</button>
+        </div>
+      </form>
+    </dialog>
+  </main>
+
+  <script type="module" src="/src/frontend/app.ts"></script>
+</body>
+</html>

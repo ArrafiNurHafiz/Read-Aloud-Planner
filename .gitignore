@@ -1,0 +1,7 @@
+node_modules/
+dist/
+dist-frontend/
+.env
+*.log
+.playwright-report/
+test-results/

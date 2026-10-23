@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Panduan Aksesibilitas — Read Aloud Planner</title>
+  <meta name="description" content="Dokumentasi aksesibilitas, pintasan keyboard, dan panduan screen reader untuk Read Aloud Planner.">
+  <link rel="stylesheet" href="/src/frontend/styles.css">
+  <link rel="manifest" href="/manifest.webmanifest">
+</head>
+<body>
+  <!-- Skip Link -->
+  <a href="#main" class="skip-link">Lewati ke konten</a>
+
+  <header role="banner" class="app-header">
+    <div class="header-inner">
+      <h1>Read Aloud Planner</h1>
+      <nav aria-label="Navigasi Bantuan" class="nav-toolbar">
+        <a href="/" class="nav-link">Kembali ke Aplikasi</a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main" class="card" style="margin: 2rem auto; max-width: 850px;">
+    <h2>Panduan Aksesibilitas & Pembaca Layar</h2>
+    <p>Read Aloud Planner dirancang dari awal untuk penyandang disabilitas netra, penglihatan rendah (low vision), dan pengguna keyboard murni tanpa ketergantungan pada tetikus (mouse).</p>
+
+    <h3>Daftar Pintasan Keyboard</h3>
+    <table aria-label="Tabel Pintasan Keyboard">
+      <thead>
+        <tr>
+          <th scope="col">Tombol</th>
+          <th scope="col">Fungsi</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><kbd>S</kbd></td>
+          <td>Mulai atau hentikan pembacaan suara linear untuk seluruh jadwal hari yang dipilih.</td>
+        </tr>
+        <tr>
+          <td><kbd>D</kbd></td>
+          <td>Tandai kegiatan yang sedang aktif atau difokuskan sebagai selesai/belum selesai.</td>
+        </tr>
+        <tr>
+          <td><kbd>N</kbd></td>
+          <td>Buka formulir dialog untuk menambah kegiatan baru.</td>
+        </tr>
+        <tr>
+          <td><kbd>Esc</kbd></td>
+          <td>Tutup dialog pop-up atau keluar dari Mode Fokus.</td>
+        </tr>
+        <tr>
+          <td><kbd>Tab</kbd> / <kbd>Shift + Tab</kbd></td>
+          <td>Pindah fokus navigasi antar elemen interaktif secara linear dan terprediksi.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h3>Panduan Pembaca Layar (Screen Reader)</h3>
+    <p>Aplikasi ini kompatibel secara penuh dengan pembaca layar modern seperti <strong>NVDA</strong>, <strong>JAWS</strong>, <strong>VoiceOver (macOS / iOS)</strong>, dan <strong>TalkBack (Android)</strong>.</p>
+    <ul>
+      <li><strong>Landmark Semantik:</strong> Seluruh area aplikasi diidentifikasi menggunakan elemen semantik HTML5 standar (Header, Main, Nav, Section, Dialog) sehingga Anda dapat melompat antar bagian menggunakan tombol pintasan pembaca layar Anda.</li>
+      <li><strong>Format Kalimat Linear:</strong> Setiap kegiatan dirangkum dalam kalimat waktu lengkap yang teratur (contoh: <em>"Senin, 08.00, Kuliah Basis Data, 2 jam, ruang 301. ✓ Selesai"</em>), menghindari kebingungan navigasi sel kisi kalender visual.</li>
+      <li><strong>Pemberitahuan Dinamis (ARIA Live):</strong> Pembaruan status (seperti kegiatan baru ditambahkan, dihapus, atau ditandai selesai) diumumkan secara sopan (polite live region) agar tidak memotong ucapan screen reader Anda saat sedang mengetik.</li>
+      <li><strong>Teks Takarir Suara (Caption Fallback):</strong> Jika browser tidak mendukung Web Speech API atau suara dimatikan, teks pembacaan tetap ditampilkan di area status takarir visual.</li>
+    </ul>
+
+    <h3>Komitmen Standar WCAG 2.2 Level AA</h3>
+    <p>Read Aloud Planner memenuhi standar Web Content Accessibility Guidelines (WCAG) 2.2 Level AA:</p>
+    <ul>
+      <li><strong>Rasio Kontras Warna (Kriteria 1.4.3 & 1.4.11):</strong> Rasio kontras teks biasa minimal 4.5:1 terhadap latar belakang. Komponen antarmuka pengguna memiliki rasio kontras minimal 3:1. Tersedia pula <strong>Mode Kontras Tinggi</strong> untuk tampilan hitam-kuning monokrom.</li>
+      <li><strong>Indikator Fokus Visual (Kriteria 2.4.7 & 2.4.11):</strong> Elemen interaktif yang menerima fokus keyboard ditandai dengan garis batas solid tebal 3 piksel dengan jarak offset 3 piksel.</li>
+      <li><strong>Ukuran Target Sentuh (Kriteria 2.5.8):</strong> Seluruh tombol, bidang masukan formulir, dan tautan memiliki dimensi fisik minimal 44x44 piksel.</li>
+      <li><strong>Tipografi Fleksibel:</strong> Ukuran font dapat diperbesar hingga 200% tanpa kehilangan konten atau fungsionalitas aplikasi.</li>
+    </ul>
+
+    <p style="margin-top: 2rem;">
+      <a href="/" class="btn-primary" style="display:inline-block; text-decoration:none;">Kembali ke Jadwal Utama</a>
+    </p>
+  </main>
+</body>
+</html>
