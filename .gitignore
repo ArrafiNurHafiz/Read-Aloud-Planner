@@ -5,3 +5,4 @@ dist-frontend/
 *.log
 .playwright-report/
 test-results/
+.vercel

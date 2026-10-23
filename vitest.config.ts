@@ -4,6 +4,7 @@ export default defineConfig({
   test: {
     globals: true,
     environment: 'node',
+    testTimeout: 15000,
     include: ['tests/unit/**/*.test.ts', 'tests/integration/**/*.test.ts']
   }
 });

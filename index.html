@@ -42,6 +42,8 @@
         </select>
         <a href="/help.html" class="nav-link">Panduan Aksesibilitas</a>
         <a href="/ReadAloudPlanner.apk" class="nav-link" download="ReadAloudPlanner.apk" aria-label="Unduh APK Android">Unduh APK</a>
+        <button type="button" id="btn-test-audio" class="btn-secondary" aria-label="Tes suara audio">Tes Suara</button>
+        <button type="button" id="btn-toggle-auth" class="btn-secondary" aria-label="Masuk atau kelola akun">Akun</button>
         <button type="button" id="btn-logout" class="btn-secondary" style="display:none;">Keluar</button>
       </nav>
     </div>
@@ -49,9 +51,12 @@
 
   <!-- Main Content Landmark -->
   <main id="main-content" role="main">
-    <!-- Auth Section (Visible when not logged in) -->
-    <section id="auth-section" aria-labelledby="auth-heading" class="card">
-      <h2 id="auth-heading">Masuk ke Akun Anda</h2>
+    <!-- Auth Section (Collapsible Dialog Card) -->
+    <section id="auth-section" aria-labelledby="auth-heading" class="card" style="display:none;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+        <h2 id="auth-heading" style="margin: 0;">Masuk / Sinkronisasi Akun</h2>
+        <button type="button" id="btn-close-auth" class="btn-secondary">Tutup (<kbd>Esc</kbd>)</button>
+      </div>
       
       <!-- Login Form -->
       <form id="form-login" novalidate>
@@ -66,6 +71,7 @@
         <div class="button-row">
           <button type="submit" class="btn-primary">Masuk</button>
           <button type="button" id="btn-show-register" class="btn-secondary">Daftar Akun Baru</button>
+          <button type="button" id="btn-use-offline" class="btn-secondary">Gunakan Mode Lokal</button>
         </div>
       </form>
 
@@ -86,8 +92,8 @@
       </form>
     </section>
 
-    <!-- Main Planner View (Visible when logged in) -->
-    <section id="planner-section" aria-labelledby="planner-heading" style="display:none;">
+    <!-- Main Planner View (Directly Visible by default) -->
+    <section id="planner-section" aria-labelledby="planner-heading">
       <div class="planner-toolbar">
         <h2 id="planner-heading">Jadwal Hari Ini</h2>
         <div class="date-selector">
@@ -99,6 +105,9 @@
       <!-- Linear Control Bar -->
       <section aria-labelledby="controls-heading" class="controls-card">
         <h3 id="controls-heading" class="sr-only">Kontrol Jadwal</h3>
+        <button type="button" id="btn-voice-add" class="btn-primary" aria-keyshortcuts="V" style="background: #2563eb; color: #ffffff;">
+          <span aria-hidden="true">🎤 </span>Tambah via Suara (<kbd>V</kbd>)
+        </button>
         <button type="button" id="btn-read-all" class="btn-primary" aria-keyshortcuts="S">
           Bacakan Jadwal (<kbd>S</kbd>)
         </button>
@@ -108,8 +117,8 @@
         <button type="button" id="btn-focus-mode" class="btn-secondary">
           Mode Fokus
         </button>
-        <button type="button" id="btn-add-activity" class="btn-primary" aria-keyshortcuts="N">
-          Tambah Kegiatan (<kbd>N</kbd>)
+        <button type="button" id="btn-add-activity" class="btn-secondary" aria-keyshortcuts="N">
+          Ketik Manual (<kbd>N</kbd>)
         </button>
       </section>
 

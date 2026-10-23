@@ -8,13 +8,16 @@
 
 ## Fitur Utama
 
+- 🎤 **Input Suara Cerdas (Speech-to-Text):** Tambah jadwal tanpa mengetik cukup dengan berbicara secara alami (contoh: *"Kuliah Pemrograman besok jam 9 pagi 2 jam di lab 1"*). Sistem otomatis mengekstrak judul, tanggal, jam mulai, durasi, dan lokasi (Pintasan keyboard: <kbd>V</kbd>).
 - 🎙️ **Kalimat Linear Alami:** Menggantikan kisi kalender visual rumit dengan format kalimat terstruktur yang bermakna saat dibacakan (contoh: *"Senin, 08.00, Kuliah Basis Data, 2 jam, ruang 301. Selesai."*).
-- 🔊 **Web Speech API & Web Audio Earcons:** Pembacaan suara berurutan di sisi klien dengan kontrol kecepatan (0.5x–2.0x) serta umpan balik nada sintetis (*audio earcons*) tanpa dependensi eksternal.
+- 🔊 **Web Speech API & Web Audio Earcons:** Pembacaan suara berurutan di sisi klien dengan kontrol kecepatan (0.5x–2.0x), pemilihan suara otomatis, audio unlock untuk mobile Safari/Chrome, serta umpan balik nada sintetis (*audio earcons*).
+- 💾 **Penyimpanan Offline-First:** Jadwal langsung tersimpan secara lokal (`localStorage`) dan dapat digunakan tanpa login maupun saat offline, serta otomatis tersinkronisasi jika akun backend tersedia.
 - 🎯 **Mode Fokus (Satu Layar Satu Kegiatan):** Mengurangi *cognitive overload* dengan memfokuskan antarmuka pada satu kegiatan aktif beserta kontrol audio otomatis.
 - ⌨️ **Navigasi 100% Bebas Tetikus (Keyboard-Only):**
+  - `V` — Mulai input suara untuk menambah kegiatan baru.
   - `S` — Mulai / Hentikan pembacaan audio jadwal.
   - `D` — Tandai kegiatan selesai / belum selesai.
-  - `N` — Buka dialog tambah kegiatan baru.
+  - `N` — Buka dialog tambah kegiatan baru secara manual.
   - `Esc` — Tutup dialog atau keluar dari Mode Fokus.
   - `Tab` / `Shift + Tab` — Navigasi fokus logis dengan indikator cincin fokus solid 3px kontras tinggi.
 - ♿ **Kepatuhan WCAG 2.2 Level AA:**

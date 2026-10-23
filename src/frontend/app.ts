@@ -1,5 +1,7 @@
 import { announce } from './a11y.js';
 import { SpeechCoordinator } from './speech.js';
+import { LocalStorageRepository, type ActivityItem } from './storage.js';
+import { VoiceInputController } from './voice_input.js';
 
 export function playEarcon(type: 'tap' | 'success' | 'warning' | 'alert') {
   try {
@@ -16,7 +18,7 @@ export function playEarcon(type: 'tap' | 'success' | 'warning' | 'alert') {
     if (type === 'tap') {
       osc.type = 'sine';
       osc.frequency.setValueAtTime(440, now);
-      gain.gain.setValueAtTime(0.1, now);
+      gain.gain.setValueAtTime(0.12, now);
       gain.gain.exponentialRampToValueAtTime(0.001, now + 0.08);
       osc.start(now);
       osc.stop(now + 0.08);
@@ -24,21 +26,21 @@ export function playEarcon(type: 'tap' | 'success' | 'warning' | 'alert') {
       osc.type = 'triangle';
       osc.frequency.setValueAtTime(587.33, now);
       osc.frequency.setValueAtTime(880, now + 0.1);
-      gain.gain.setValueAtTime(0.15, now);
+      gain.gain.setValueAtTime(0.18, now);
       gain.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
       osc.start(now);
       osc.stop(now + 0.25);
     } else if (type === 'warning') {
       osc.type = 'sawtooth';
       osc.frequency.setValueAtTime(329.63, now);
-      gain.gain.setValueAtTime(0.12, now);
+      gain.gain.setValueAtTime(0.14, now);
       gain.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
       osc.start(now);
       osc.stop(now + 0.15);
     } else if (type === 'alert') {
       osc.type = 'square';
       osc.frequency.setValueAtTime(220, now);
-      gain.gain.setValueAtTime(0.15, now);
+      gain.gain.setValueAtTime(0.18, now);
       gain.gain.exponentialRampToValueAtTime(0.001, now + 0.2);
       osc.start(now);
       osc.stop(now + 0.2);
@@ -54,80 +56,75 @@ export function playEarcon(type: 'tap' | 'success' | 'warning' | 'alert') {
   }
 }
 
-interface Activity {
-  id: string;
-  title: string;
-  date: string;
-  start_time: string;
-  duration_min: number;
-  location: string;
-  notes: string;
-  done: boolean;
-  linear_sentence: string;
-}
-
-const speech = new SpeechCoordinator();
-let currentActivities: Activity[] = [];
-let focusIndex = 0;
-let isReadingAll = false;
-let fontSizeStep = 0; // 0: standard (18px), 1: large (22px), 2: xlarge (26px)
-
-async function checkSession(): Promise<void> {
+function unlockAudio() {
   try {
-    const res = await fetch('/api/auth/me');
-    if (res.ok) {
-      showPlanner();
-      loadActivities();
-    } else {
-      showAuth();
+    const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
+    if (AudioCtx) {
+      const ctx = new AudioCtx();
+      ctx.resume().catch(() => {});
+    }
+    if (typeof window !== 'undefined' && window.speechSynthesis) {
+      window.speechSynthesis.resume();
     }
   } catch {
-    showAuth();
+    // Ignore
   }
 }
 
-function showAuth(): void {
-  const authSection = document.getElementById('auth-section');
-  const plannerSection = document.getElementById('planner-section');
-  const btnLogout = document.getElementById('btn-logout');
+const storageRepo = new LocalStorageRepository();
+const speech = new SpeechCoordinator();
+const voiceInput = new VoiceInputController();
 
-  if (authSection) authSection.style.display = 'block';
-  if (plannerSection) plannerSection.style.display = 'none';
-  if (btnLogout) btnLogout.style.display = 'none';
-}
+let currentActivities: ActivityItem[] = [];
+let focusIndex = 0;
+let isReadingAll = false;
+let fontSizeStep = 0; // 0: standard (18px), 1: large (22px), 2: xlarge (26px)
+let pendingDeleteId: string | null = null;
 
-function showPlanner(): void {
-  const authSection = document.getElementById('auth-section');
-  const plannerSection = document.getElementById('planner-section');
-  const btnLogout = document.getElementById('btn-logout');
+async function checkSession(): Promise<void> {
+  try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 1200);
+    const res = await fetch('/api/auth/me', { signal: controller.signal });
+    clearTimeout(timeoutId);
 
-  if (authSection) authSection.style.display = 'none';
-  if (plannerSection) plannerSection.style.display = 'block';
-  if (btnLogout) btnLogout.style.display = 'inline-block';
+    if (res.ok) {
+      const btnLogout = document.getElementById('btn-logout');
+      if (btnLogout) btnLogout.style.display = 'inline-block';
+    }
+  } catch {
+    // Running in local/offline mode
+  }
+  await loadActivities();
 }
 
 async function loadActivities(targetDate?: string): Promise<void> {
   const dateInput = document.getElementById('input-date') as HTMLInputElement | null;
   const todayStr = new Date().toISOString().split('T')[0];
   const date = targetDate || (dateInput && dateInput.value) || todayStr;
-  
+
   if (dateInput) {
     dateInput.value = date;
   }
 
   try {
-    const res = await fetch(`/api/activities?date=${date}`);
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 1200);
+    const res = await fetch(`/api/activities?date=${date}`, { signal: controller.signal });
+    clearTimeout(timeoutId);
+
     if (res.ok) {
       const data = await res.json();
       currentActivities = data.activities || [];
-      renderActivities();
-      announce(`Jadwal tanggal ${date} dimuat. Terdapat ${currentActivities.length} kegiatan.`);
     } else {
-      announce('Gagal memuat kegiatan.', 'assertive');
+      currentActivities = storageRepo.getActivitiesByDate(date);
     }
   } catch {
-    announce('Kesalahan koneksi saat memuat kegiatan.', 'assertive');
+    currentActivities = storageRepo.getActivitiesByDate(date);
   }
+
+  renderActivities();
+  announce(`Jadwal tanggal ${date} dimuat. Terdapat ${currentActivities.length} kegiatan.`);
 }
 
 function renderActivities(): void {
@@ -137,7 +134,7 @@ function renderActivities(): void {
 
   if (currentActivities.length === 0) {
     const emptyLi = document.createElement('li');
-    emptyLi.innerHTML = '<p>Tidak ada kegiatan untuk hari ini.</p>';
+    emptyLi.innerHTML = '<p>Tidak ada kegiatan untuk hari ini. Gunakan "Tambah via Suara" atau "Ketik Manual".</p>';
     listEl.appendChild(emptyLi);
     return;
   }
@@ -172,6 +169,7 @@ function renderActivities(): void {
     btnSpeak.textContent = 'Bacakan';
     btnSpeak.onclick = (e) => {
       e.stopPropagation();
+      playEarcon('tap');
       speech.speak(act.linear_sentence);
     };
 
@@ -194,28 +192,17 @@ function renderActivities(): void {
 }
 
 async function toggleDone(id: string, newDone: boolean): Promise<void> {
-  try {
-    const res = await fetch(`/api/activities/${id}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ done: newDone })
-    });
+  storageRepo.updateActivity(id, { done: newDone });
+  fetch(`/api/activities/${id}`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ done: newDone })
+  }).catch(() => {});
 
-    if (res.ok) {
-      playEarcon(newDone ? 'success' : 'tap');
-      announce(newDone ? 'Kegiatan ditandai selesai.' : 'Kegiatan ditandai belum selesai.');
-      await loadActivities();
-    } else {
-      playEarcon('alert');
-      announce('Gagal memperbarui status kegiatan.', 'assertive');
-    }
-  } catch {
-    playEarcon('alert');
-    announce('Kesalahan jaringan.', 'assertive');
-  }
+  playEarcon(newDone ? 'success' : 'tap');
+  announce(newDone ? 'Kegiatan ditandai selesai.' : 'Kegiatan ditandai belum selesai.');
+  await loadActivities();
 }
-
-let pendingDeleteId: string | null = null;
 
 function deleteActivity(id: string): void {
   pendingDeleteId = id;
@@ -230,29 +217,37 @@ function deleteActivity(id: string): void {
 
 function readAllActivities(): void {
   if (currentActivities.length === 0) {
+    playEarcon('tap');
     speech.speak('Tidak ada kegiatan untuk dibacakan hari ini.');
     return;
   }
 
   isReadingAll = true;
   let index = 0;
+  playEarcon('tap');
+
   const btnStop = document.getElementById('btn-stop-speech');
-  if (btnStop) btnStop.style.display = 'inline-block';
+  if (btnStop) {
+    btnStop.style.display = 'inline-block';
+    btnStop.focus();
+  }
 
   function speakNext(): void {
     if (!isReadingAll || index >= currentActivities.length) {
       isReadingAll = false;
       if (btnStop) btnStop.style.display = 'none';
-      announce('Selesai membacakan seluruh jadwal.');
+      const btnReadAll = document.getElementById('btn-read-all');
+      if (btnReadAll) btnReadAll.focus();
+      playEarcon('success');
+      announce('Selesai membacakan seluruh kegiatan.');
       return;
     }
 
     const act = currentActivities[index];
     index++;
+    announce(`Membacakan kegiatan ${index} dari ${currentActivities.length}: ${act.linear_sentence}`);
     speech.speak(act.linear_sentence, undefined, () => {
-      if (isReadingAll) {
-        setTimeout(speakNext, 400);
-      }
+      setTimeout(speakNext, 300);
     });
   }
 
@@ -262,16 +257,21 @@ function readAllActivities(): void {
 function stopAllSpeech(): void {
   isReadingAll = false;
   speech.stop();
+  playEarcon('tap');
   const btnStop = document.getElementById('btn-stop-speech');
   if (btnStop) btnStop.style.display = 'none';
+  const btnReadAll = document.getElementById('btn-read-all');
+  if (btnReadAll) btnReadAll.focus();
+  announce('Pembacaan jadwal dihentikan.');
 }
 
-// Mode Fokus Logic
 function openFocusMode(): void {
   if (currentActivities.length === 0) {
+    playEarcon('alert');
     announce('Tidak ada kegiatan untuk Mode Fokus.', 'assertive');
     return;
   }
+  playEarcon('tap');
   focusIndex = 0;
   const focusSection = document.getElementById('focus-section');
   if (focusSection) {
@@ -286,10 +286,12 @@ function exitFocusMode(): void {
   const focusSection = document.getElementById('focus-section');
   if (focusSection) {
     focusSection.style.display = 'none';
+    speech.stop();
+    playEarcon('tap');
+    announce('Keluar dari mode fokus.');
+    const btnFocus = document.getElementById('btn-focus-mode');
+    if (btnFocus) btnFocus.focus();
   }
-  speech.stop();
-  const btnFocus = document.getElementById('btn-focus-mode');
-  if (btnFocus) btnFocus.focus();
 }
 
 function updateFocusDisplay(): void {
@@ -305,13 +307,16 @@ function updateFocusDisplay(): void {
   announce(`Mode fokus. Kegiatan ${focusIndex + 1} dari ${currentActivities.length}: ${act.linear_sentence}`);
 }
 
-// Setup Global Keyboard Shortcuts
+// Global Keyboard Shortcuts
 window.addEventListener('keydown', (e) => {
   const activeEl = document.activeElement;
   const activeTag = (activeEl?.tagName || '').toLowerCase();
   if (activeTag === 'input' || activeTag === 'textarea' || activeTag === 'select') return;
 
-  if (e.key === 's' || e.key === 'S') {
+  if (e.key === 'v' || e.key === 'V') {
+    e.preventDefault();
+    document.getElementById('btn-voice-add')?.click();
+  } else if (e.key === 's' || e.key === 'S') {
     e.preventDefault();
     if (speech.isSpeaking() || isReadingAll) {
       stopAllSpeech();
@@ -352,29 +357,96 @@ window.addEventListener('keydown', (e) => {
       return;
     }
 
-    const dialog = document.getElementById('dialog-add-activity') as HTMLDialogElement | null;
-    if (dialog && dialog.open) {
-      dialog.close();
+    const dialogAdd = document.getElementById('dialog-add-activity') as HTMLDialogElement | null;
+    if (dialogAdd && dialogAdd.open) {
+      dialogAdd.close();
       const btnAdd = document.getElementById('btn-add-activity');
       if (btnAdd) btnAdd.focus();
+      return;
+    }
+
+    const dialogDel = document.getElementById('dialog-confirm-delete') as HTMLDialogElement | null;
+    if (dialogDel && dialogDel.open) {
+      dialogDel.close();
+      pendingDeleteId = null;
+      return;
+    }
+
+    const authSection = document.getElementById('auth-section');
+    if (authSection && authSection.style.display !== 'none') {
+      authSection.style.display = 'none';
     }
   }
 });
 
-// DOMContentLoaded Event Binding
+// Setup Listeners
 document.addEventListener('DOMContentLoaded', () => {
+  document.addEventListener('click', unlockAudio, { once: true });
+  document.addEventListener('touchstart', unlockAudio, { once: true });
+
   checkSession();
 
-  // Register Service Worker for PWA
+  // Register Service Worker
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
       navigator.serviceWorker.register('/sw.js').catch((err) => {
-        console.debug('ServiceWorker registration error:', err);
+        console.debug('ServiceWorker error:', err);
       });
     });
   }
 
-  // Auth form handlers
+  // Voice Add Button
+  document.getElementById('btn-voice-add')?.addEventListener('click', () => {
+    unlockAudio();
+    voiceInput.startListening(
+      storageRepo,
+      speech,
+      playEarcon,
+      (newAct) => {
+        loadActivities(newAct.date);
+      },
+      (err) => {
+        announce(err, 'assertive');
+      }
+    );
+  });
+
+  // Audio Test Button
+  document.getElementById('btn-test-audio')?.addEventListener('click', () => {
+    unlockAudio();
+    playEarcon('success');
+    speech.speak('Audio dan suara berfungsi dengan baik. Read Aloud Planner siap membacakan jadwal Anda.');
+    const captionEl = document.getElementById('speech-caption-text');
+    if (captionEl) {
+      captionEl.textContent = 'Audio dan suara berfungsi dengan baik. Read Aloud Planner siap membacakan jadwal Anda.';
+    }
+    announce('Audio dan suara berfungsi normal.');
+  });
+
+  // Auth Toggle & Close Buttons
+  document.getElementById('btn-toggle-auth')?.addEventListener('click', () => {
+    const authSec = document.getElementById('auth-section');
+    if (authSec) {
+      const isHidden = authSec.style.display === 'none';
+      authSec.style.display = isHidden ? 'block' : 'none';
+      if (isHidden) {
+        document.getElementById('login-email')?.focus();
+      }
+    }
+  });
+
+  document.getElementById('btn-close-auth')?.addEventListener('click', () => {
+    const authSec = document.getElementById('auth-section');
+    if (authSec) authSec.style.display = 'none';
+  });
+
+  document.getElementById('btn-use-offline')?.addEventListener('click', () => {
+    const authSec = document.getElementById('auth-section');
+    if (authSec) authSec.style.display = 'none';
+    announce('Mode lokal aktif.');
+  });
+
+  // Auth Forms
   const formLogin = document.getElementById('form-login') as HTMLFormElement | null;
   formLogin?.addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -389,15 +461,21 @@ document.addEventListener('DOMContentLoaded', () => {
       });
 
       if (res.ok) {
+        playEarcon('success');
         announce('Login berhasil.');
-        showPlanner();
+        const authSec = document.getElementById('auth-section');
+        if (authSec) authSec.style.display = 'none';
+        const btnLogout = document.getElementById('btn-logout');
+        if (btnLogout) btnLogout.style.display = 'inline-block';
         loadActivities();
       } else {
-        const data = await res.json();
+        const data = await res.json().catch(() => ({}));
+        playEarcon('alert');
         announce(data.error || 'Login gagal.', 'assertive');
       }
     } catch {
-      announce('Kesalahan jaringan saat login.', 'assertive');
+      playEarcon('alert');
+      announce('Server akun tidak terjangkau. Menggunakan data lokal.', 'assertive');
     }
   });
 
@@ -415,15 +493,18 @@ document.addEventListener('DOMContentLoaded', () => {
       });
 
       if (res.ok) {
+        playEarcon('success');
         announce('Registrasi berhasil. Silakan masuk.');
         if (formRegister) formRegister.style.display = 'none';
         if (formLogin) formLogin.style.display = 'block';
       } else {
-        const data = await res.json();
+        const data = await res.json().catch(() => ({}));
+        playEarcon('alert');
         announce(data.error || 'Registrasi gagal.', 'assertive');
       }
     } catch {
-      announce('Kesalahan jaringan saat registrasi.', 'assertive');
+      playEarcon('alert');
+      announce('Server akun tidak terjangkau.', 'assertive');
     }
   });
 
@@ -444,20 +525,22 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('btn-logout')?.addEventListener('click', async () => {
     try {
       await fetch('/api/auth/logout', { method: 'POST' });
-      announce('Anda telah keluar.');
-      showAuth();
     } catch {
-      showAuth();
+      // Ignore
     }
+    const btnLogout = document.getElementById('btn-logout');
+    if (btnLogout) btnLogout.style.display = 'none';
+    playEarcon('tap');
+    announce('Anda telah keluar.');
   });
 
-  // Date selection
+  // Date picker
   const inputDate = document.getElementById('input-date') as HTMLInputElement | null;
   inputDate?.addEventListener('change', () => {
     loadActivities(inputDate.value);
   });
 
-  // Buttons in planner toolbar
+  // Toolbar Actions
   document.getElementById('btn-read-all')?.addEventListener('click', readAllActivities);
   document.getElementById('btn-stop-speech')?.addEventListener('click', stopAllSpeech);
   document.getElementById('btn-focus-mode')?.addEventListener('click', openFocusMode);
@@ -512,25 +595,28 @@ document.addEventListener('DOMContentLoaded', () => {
     const location = (document.getElementById('act-location') as HTMLInputElement).value;
     const notes = (document.getElementById('act-notes') as HTMLTextAreaElement).value;
 
-    try {
-      const res = await fetch('/api/activities', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ title, date, start_time, duration_min, location, notes })
-      });
+    const newAct = storageRepo.addActivity({
+      title,
+      date,
+      start_time,
+      duration_min,
+      location,
+      notes
+    });
 
-      if (res.ok) {
-        announce(`Kegiatan ${title} berhasil ditambahkan.`);
-        if (dialogAdd) dialogAdd.close();
-        formAddActivity.reset();
-        await loadActivities(date);
-      } else {
-        const data = await res.json();
-        announce(data.error || 'Gagal menambahkan kegiatan.', 'assertive');
-      }
-    } catch {
-      announce('Kesalahan jaringan.', 'assertive');
-    }
+    fetch('/api/activities', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ title, date, start_time, duration_min, location, notes })
+    }).catch(() => {});
+
+    playEarcon('success');
+    announce(`Kegiatan ${title} berhasil ditambahkan.`);
+    speech.speak(`Kegiatan berhasil ditambahkan. ${newAct.linear_sentence}`);
+
+    if (dialogAdd) dialogAdd.close();
+    formAddActivity.reset();
+    await loadActivities(date);
   });
 
   // High contrast mode toggle
@@ -577,6 +663,7 @@ document.addEventListener('DOMContentLoaded', () => {
   selectLang?.addEventListener('change', () => {
     const lang = selectLang.value;
     speech.setLanguage(lang);
+    voiceInput.setLanguage(lang);
     announce(lang === 'id-ID' ? 'Bahasa pembacaan diubah ke Indonesia.' : 'Speech language set to English.');
   });
 
@@ -588,20 +675,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const id = pendingDeleteId;
     pendingDeleteId = null;
 
-    try {
-      const res = await fetch(`/api/activities/${id}`, { method: 'DELETE' });
-      if (res.ok) {
-        playEarcon('success');
-        announce('Kegiatan berhasil dihapus.');
-        await loadActivities();
-      } else {
-        playEarcon('alert');
-        announce('Gagal menghapus kegiatan.', 'assertive');
-      }
-    } catch {
-      playEarcon('alert');
-      announce('Kesalahan jaringan saat menghapus kegiatan.', 'assertive');
-    }
+    storageRepo.deleteActivity(id);
+    fetch(`/api/activities/${id}`, { method: 'DELETE' }).catch(() => {});
+
+    playEarcon('success');
+    announce('Kegiatan berhasil dihapus.');
+    await loadActivities();
   });
 
   document.getElementById('btn-confirm-delete-no')?.addEventListener('click', () => {

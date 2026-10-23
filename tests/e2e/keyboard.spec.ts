@@ -36,4 +36,12 @@ test.describe('Keyboard-Only Workflow Verification', () => {
     await page.keyboard.press('Escape');
     await expect(dialog).not.toBeVisible();
   });
+
+  test('test audio button plays audio test and updates status', async ({ page }) => {
+    await page.goto('/');
+    const testAudioBtn = page.locator('#btn-test-audio');
+    await testAudioBtn.click();
+    const caption = page.locator('#speech-caption-text');
+    await expect(caption).toContainText('Audio dan suara berfungsi dengan baik');
+  });
 });

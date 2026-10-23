@@ -17,7 +17,7 @@ export function buildServer(): FastifyInstance {
   fastify.register(helmet, { contentSecurityPolicy: false });
   fastify.register(cors, { origin: true, credentials: true });
   fastify.register(cookie, { secret: process.env.COOKIE_SECRET || 'super-secret-cookie-key-32-chars!' });
-  fastify.register(rateLimit, { max: 100, timeWindow: '1 minute' });
+  fastify.register(rateLimit, { max: 2000, timeWindow: '1 minute' });
 
   const distFrontendPath = path.resolve(process.cwd(), 'dist-frontend');
   const publicPath = path.resolve(process.cwd(), 'public');
