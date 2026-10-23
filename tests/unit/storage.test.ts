@@ -50,7 +50,7 @@ describe('LocalStorageRepository', () => {
       location: 'Ruang 10'
     });
 
-    const updated = repo.updateActivity(act.id, { done: true });
+    const updated = repo.updateActivity(act.id, { done: true }, 'id');
     expect(updated?.done).toBe(true);
     expect(updated?.linear_sentence).toContain('Selesai');
   });

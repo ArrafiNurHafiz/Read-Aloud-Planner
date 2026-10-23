@@ -32,37 +32,51 @@ describe('DoubleTapManager & Accessible Description', () => {
   let manager: DoubleTapManager;
 
   beforeEach(() => {
-    manager = new DoubleTapManager();
+    manager = new DoubleTapManager(true, 'en');
   });
 
-  it('generates clear Indonesian spoken descriptions for buttons', () => {
+  it('generates clear Indonesian spoken descriptions when lang is id', () => {
     const btn = createMockElement({
       id: 'btn-voice-add',
       text: 'Tambah via Suara (V)'
     });
 
-    const desc = getAccessibleDescription(btn);
+    const desc = getAccessibleDescription(btn, 'id');
     expect(desc).toContain('Tombol');
     expect(desc).toContain('Tambah via Suara');
     expect(desc).toContain('Ketuk dua kali');
   });
 
-  it('generates clear descriptions for schedule items', () => {
+  it('generates clear English spoken descriptions when lang is en', () => {
+    const btn = createMockElement({
+      id: 'btn-voice-add',
+      text: 'Voice Add (V)'
+    });
+
+    const desc = getAccessibleDescription(btn, 'en');
+    expect(desc).toContain('Voice Add Button');
+    expect(desc).toContain('Double tap');
+  });
+
+  it('generates clear descriptions for schedule items in both languages', () => {
     const item = createMockElement({
       text: 'Senin, 08.00, Kuliah Basis Data, 2 jam, ruang 301.',
       classList: ['activity-linear-item'],
       tagName: 'li'
     });
 
-    const desc = getAccessibleDescription(item);
-    expect(desc).toContain('Kegiatan:');
-    expect(desc).toContain('Kuliah Basis Data');
-    expect(desc).toContain('Ketuk dua kali');
+    const descId = getAccessibleDescription(item, 'id');
+    expect(descId).toContain('Kegiatan:');
+    expect(descId).toContain('Kuliah Basis Data');
+
+    const descEn = getAccessibleDescription(item, 'en');
+    expect(descEn).toContain('Task:');
+    expect(descEn).toContain('Double tap');
   });
 
   it('handles first click by reporting first tap and not executing action', () => {
     let executed = false;
-    const btn = createMockElement({ text: 'Bacakan Jadwal' });
+    const btn = createMockElement({ text: 'Read Schedule' });
 
     const result = manager.handleClick(btn, () => {
       executed = true;
@@ -70,12 +84,12 @@ describe('DoubleTapManager & Accessible Description', () => {
 
     expect(result.shouldExecute).toBe(false);
     expect(executed).toBe(false);
-    expect(result.announcement).toContain('Bacakan Jadwal');
+    expect(result.announcement).toContain('Read Schedule Button');
   });
 
   it('executes action on second click within delay threshold', () => {
     let executed = false;
-    const btn = createMockElement({ text: 'Bacakan Jadwal' });
+    const btn = createMockElement({ text: 'Read Schedule' });
 
     // First click
     manager.handleClick(btn, () => { executed = true; });
@@ -89,7 +103,7 @@ describe('DoubleTapManager & Accessible Description', () => {
 
   it('treats click as first click if delay threshold has expired', async () => {
     let executed = false;
-    const btn = createMockElement({ text: 'Bacakan Jadwal' });
+    const btn = createMockElement({ text: 'Read Schedule' });
 
     // First click
     manager.handleClick(btn, () => { executed = true; }, 50);

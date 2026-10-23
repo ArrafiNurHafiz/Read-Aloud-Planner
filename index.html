@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<html lang="id">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Read Aloud Planner — Jadwal yang Bisa Didengar</title>
-  <meta name="description" content="Perencana harian linear aksesibel untuk screen reader dan pembaca suara.">
+  <title>Read Aloud Planner — Hear Your Schedule, Not Just See It</title>
+  <meta name="description" content="Accessible linear daily planner for screen reader, voice, and keyboard-only users.">
   <link rel="stylesheet" href="/src/frontend/styles.css">
   <link rel="manifest" href="/manifest.webmanifest">
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -15,7 +15,7 @@
 </head>
 <body>
   <!-- Skip Link for Keyboard Navigation -->
-  <a href="#main-content" class="skip-link">Lewati ke konten utama</a>
+  <a href="#main-content" id="skip-link" class="skip-link">Skip to main content</a>
 
   <!-- ARIA Live Regions for Assistive Technologies -->
   <div id="live-polite" aria-live="polite" class="sr-only"></div>
@@ -24,27 +24,27 @@
   <!-- Header Landmark -->
   <header role="banner" class="app-header">
     <div class="header-inner">
-      <h1>Read Aloud Planner</h1>
-      <nav aria-label="Navigasi Utama" class="nav-toolbar">
-        <button type="button" id="btn-toggle-contrast" aria-pressed="false" class="btn-secondary">Kontras Tinggi</button>
-        <button type="button" id="btn-font-size" aria-label="Huruf: Sedang, klik untuk ubah ukuran" class="btn-secondary">Huruf: Sedang</button>
-        <label for="select-speech-rate" class="sr-only">Kecepatan Suara</label>
-        <select id="select-speech-rate" aria-label="Kecepatan Suara" class="btn-secondary">
-          <option value="0.75">Kecepatan: 0.75x</option>
-          <option value="1.0" selected>Kecepatan: 1.0x</option>
-          <option value="1.25">Kecepatan: 1.25x</option>
-          <option value="1.5">Kecepatan: 1.5x</option>
+      <h1 id="app-heading">Read Aloud Planner</h1>
+      <nav aria-label="Main Navigation" class="nav-toolbar">
+        <button type="button" id="btn-toggle-contrast" aria-pressed="false" class="btn-secondary">High Contrast</button>
+        <button type="button" id="btn-font-size" aria-label="Font: Medium, click to cycle text size" class="btn-secondary">Font: Medium</button>
+        <label for="select-speech-rate" class="sr-only">Speech Rate</label>
+        <select id="select-speech-rate" aria-label="Speech Rate" class="btn-secondary">
+          <option value="0.75">Speed: 0.75x</option>
+          <option value="1.0" selected>Speed: 1.0x</option>
+          <option value="1.25">Speed: 1.25x</option>
+          <option value="1.5">Speed: 1.5x</option>
         </select>
-        <label for="select-speech-lang" class="sr-only">Bahasa Pembacaan</label>
-        <select id="select-speech-lang" aria-label="Bahasa Pembacaan" class="btn-secondary">
-          <option value="id-ID" selected>Bahasa: Indonesia</option>
-          <option value="en-US">Bahasa: Inggris</option>
+        <label for="select-speech-lang" class="sr-only">Speech Language</label>
+        <select id="select-speech-lang" aria-label="Language Selector" class="btn-secondary">
+          <option value="en-US" selected>Language: English</option>
+          <option value="id-ID">Bahasa: Indonesia</option>
         </select>
-        <a href="/help.html" class="nav-link">Panduan Aksesibilitas</a>
-        <a href="/ReadAloudPlanner.apk" class="nav-link" download="ReadAloudPlanner.apk" aria-label="Unduh APK Android">Unduh APK</a>
-        <a href="/ReadAloudPlanner_Demo_Video.mp4" class="nav-link" target="_blank" aria-label="Tonton Video Demo Produk">Video Demo</a>
-        <button type="button" id="btn-toggle-double-tap" aria-pressed="true" class="btn-secondary" aria-label="Bantuan Ketuk Ganda: Aktif">Ketuk Ganda: Aktif</button>
-        <button type="button" id="btn-test-audio" class="btn-secondary" aria-label="Tes suara audio">Tes Suara</button>
+        <a href="/help.html" id="link-help" class="nav-link">Accessibility Guide</a>
+        <a href="/ReadAloudPlanner.apk" id="link-apk" class="nav-link" download="ReadAloudPlanner.apk" aria-label="Download APK for Android">Download APK</a>
+        <a href="/ReadAloudPlanner_Demo_Video.mp4" id="link-demo" class="nav-link" target="_blank" aria-label="Demo Video of product">Demo Video</a>
+        <button type="button" id="btn-toggle-double-tap" aria-pressed="true" class="btn-secondary" aria-label="Double Tap: Active">Double Tap: Active</button>
+        <button type="button" id="btn-test-audio" class="btn-secondary" aria-label="Test Audio and speech">Test Audio</button>
       </nav>
     </div>
   </header>
@@ -54,41 +54,41 @@
     <!-- Main Planner View (Directly Visible by default) -->
     <section id="planner-section" aria-labelledby="planner-heading">
       <div class="planner-toolbar">
-        <h2 id="planner-heading">Jadwal Hari Ini</h2>
+        <h2 id="planner-heading">Today's Schedule</h2>
         <div class="date-selector">
-          <label for="input-date">Pilih Tanggal:</label>
+          <label for="input-date" id="label-date-select">Select Date:</label>
           <input type="date" id="input-date">
         </div>
       </div>
 
       <!-- Linear Control Bar -->
       <section aria-labelledby="controls-heading" class="controls-card">
-        <h3 id="controls-heading" class="sr-only">Kontrol Jadwal</h3>
+        <h3 id="controls-heading" class="sr-only">Schedule Controls</h3>
         <button type="button" id="btn-voice-add" class="btn-primary" aria-keyshortcuts="V" style="background: #2563eb; color: #ffffff;">
-          <span aria-hidden="true">🎤 </span>Tambah via Suara (<kbd>V</kbd>)
+          <span aria-hidden="true">🎤 </span><span id="text-voice-add">Voice Add</span> (<kbd>V</kbd>)
         </button>
         <button type="button" id="btn-read-all" class="btn-primary" aria-keyshortcuts="S">
-          Bacakan Jadwal (<kbd>S</kbd>)
+          <span id="text-read-all">Read Schedule</span> (<kbd>S</kbd>)
         </button>
         <button type="button" id="btn-stop-speech" class="btn-secondary" style="display:none;">
-          Berhenti Membaca
+          Stop Reading
         </button>
         <button type="button" id="btn-focus-mode" class="btn-secondary">
-          Mode Fokus
+          Focus Mode
         </button>
         <button type="button" id="btn-add-activity" class="btn-secondary" aria-keyshortcuts="N">
-          Ketik Manual (<kbd>N</kbd>)
+          <span id="text-manual-add">Manual Input</span> (<kbd>N</kbd>)
         </button>
       </section>
 
       <!-- Textual Fallback / Speech Subtitle Bar -->
-      <div id="speech-caption-container" class="caption-box" role="status" aria-label="Status Pembacaan Suara">
-        <p id="speech-caption-text">Siap membacakan jadwal.</p>
+      <div id="speech-caption-container" class="caption-box" role="status" aria-label="Voice Status">
+        <p id="speech-caption-text">Ready to read schedule.</p>
       </div>
 
       <!-- Linear Activities List -->
       <section aria-labelledby="activities-list-heading">
-        <h3 id="activities-list-heading" class="sr-only">Daftar Kegiatan Linear</h3>
+        <h3 id="activities-list-heading" class="sr-only">Linear Activities List</h3>
         <ol id="activities-list" class="activity-linear-list">
           <!-- Dynamically inserted li elements -->
         </ol>
@@ -98,13 +98,13 @@
     <!-- Focus Mode Overlay / View -->
     <section id="focus-section" aria-modal="true" role="dialog" aria-labelledby="focus-title" class="focus-modal" style="display:none;">
       <div id="focus-card" class="focus-card-body">
-        <h2 id="focus-title">Mode Fokus: Satu Kegiatan</h2>
+        <h2 id="focus-title">Focus Mode: One Task</h2>
         <p id="focus-sentence" class="focus-sentence-text"></p>
         <div class="focus-action-buttons">
-          <button type="button" id="btn-focus-prev" class="btn-secondary">Sebelumnya</button>
-          <button type="button" id="btn-focus-done" class="btn-primary" aria-keyshortcuts="D">Tandai Selesai (<kbd>D</kbd>)</button>
-          <button type="button" id="btn-focus-next" class="btn-secondary">Berikutnya</button>
-          <button type="button" id="btn-focus-exit" class="btn-secondary" aria-keyshortcuts="Escape">Keluar (<kbd>Esc</kbd>)</button>
+          <button type="button" id="btn-focus-prev" class="btn-secondary">Previous</button>
+          <button type="button" id="btn-focus-done" class="btn-primary" aria-keyshortcuts="D"><span id="text-focus-done">Mark Done</span> (<kbd>D</kbd>)</button>
+          <button type="button" id="btn-focus-next" class="btn-secondary">Next</button>
+          <button type="button" id="btn-focus-exit" class="btn-secondary" aria-keyshortcuts="Escape"><span id="text-focus-exit">Exit</span> (<kbd>Esc</kbd>)</button>
         </div>
       </div>
     </section>
@@ -112,34 +112,34 @@
     <!-- Add Activity Dialog -->
     <dialog id="dialog-add-activity" aria-labelledby="dialog-add-title">
       <form id="form-add-activity" method="dialog">
-        <h2 id="dialog-add-title">Tambah Kegiatan Baru</h2>
+        <h2 id="dialog-add-title">Add New Task</h2>
         <div class="form-group">
-          <label for="act-title">Nama Kegiatan</label>
+          <label for="act-title" id="lbl-act-title">Task Name</label>
           <input type="text" id="act-title" name="title" required>
         </div>
         <div class="form-group">
-          <label for="act-date">Tanggal</label>
+          <label for="act-date" id="lbl-act-date">Date</label>
           <input type="date" id="act-date" name="date" required>
         </div>
         <div class="form-group">
-          <label for="act-time">Jam Mulai</label>
+          <label for="act-time" id="lbl-act-time">Start Time</label>
           <input type="time" id="act-time" name="time" required>
         </div>
         <div class="form-group">
-          <label for="act-duration">Durasi (dalam menit)</label>
+          <label for="act-duration" id="lbl-act-duration">Duration (in minutes)</label>
           <input type="number" id="act-duration" name="duration" min="5" step="5" value="60" required>
         </div>
         <div class="form-group">
-          <label for="act-location">Lokasi / Ruangan (Opsional)</label>
+          <label for="act-location" id="lbl-act-location">Location / Room (Optional)</label>
           <input type="text" id="act-location" name="location">
         </div>
         <div class="form-group">
-          <label for="act-notes">Catatan Tambahan (Opsional)</label>
+          <label for="act-notes" id="lbl-act-notes">Additional Notes (Optional)</label>
           <textarea id="act-notes" name="notes" rows="3"></textarea>
         </div>
         <div class="button-row">
-          <button type="submit" class="btn-primary">Simpan Kegiatan</button>
-          <button type="button" id="btn-cancel-add" class="btn-secondary">Batal (<kbd>Esc</kbd>)</button>
+          <button type="submit" id="btn-save-task" class="btn-primary">Save Task</button>
+          <button type="button" id="btn-cancel-add" class="btn-secondary"><span id="text-cancel-add">Cancel</span> (<kbd>Esc</kbd>)</button>
         </div>
       </form>
     </dialog>
@@ -147,11 +147,11 @@
     <!-- Accessible Confirmation Dialog -->
     <dialog id="dialog-confirm-delete" aria-labelledby="dialog-confirm-title">
       <form method="dialog" class="card" style="margin: 0; min-width: 300px;">
-        <h2 id="dialog-confirm-title">Konfirmasi Hapus</h2>
-        <p id="dialog-confirm-msg">Hapus kegiatan ini dari jadwal?</p>
+        <h2 id="dialog-confirm-title">Confirm Delete</h2>
+        <p id="dialog-confirm-msg">Delete this task from your schedule?</p>
         <div class="button-row">
-          <button type="button" id="btn-confirm-delete-yes" class="btn-primary">Ya, Hapus</button>
-          <button type="button" id="btn-confirm-delete-no" class="btn-secondary">Batal (<kbd>Esc</kbd>)</button>
+          <button type="button" id="btn-confirm-delete-yes" class="btn-primary">Yes, Delete</button>
+          <button type="button" id="btn-confirm-delete-no" class="btn-secondary"><span id="text-cancel-del">Cancel</span> (<kbd>Esc</kbd>)</button>
         </div>
       </form>
     </dialog>

@@ -1,94 +1,97 @@
 <!DOCTYPE html>
-<html lang="id">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Panduan Aksesibilitas — Read Aloud Planner</title>
-  <meta name="description" content="Dokumentasi aksesibilitas, pintasan keyboard, dan panduan screen reader untuk Read Aloud Planner.">
+  <title>Accessibility Guide — Read Aloud Planner</title>
+  <meta name="description" content="Accessibility documentation, keyboard shortcuts, and screen reader guide for Read Aloud Planner.">
   <link rel="stylesheet" href="/src/frontend/styles.css">
   <link rel="manifest" href="/manifest.webmanifest">
 </head>
 <body>
   <!-- Skip Link -->
-  <a href="#main" class="skip-link">Lewati ke konten</a>
+  <a href="#main" class="skip-link">Skip to main content</a>
 
   <header role="banner" class="app-header">
     <div class="header-inner">
       <h1>Read Aloud Planner</h1>
-      <nav aria-label="Navigasi Bantuan" class="nav-toolbar">
-        <a href="/" class="nav-link">Kembali ke Aplikasi</a>
+      <nav aria-label="Help Navigation" class="nav-toolbar">
+        <a href="/" class="nav-link">Return to Main Schedule</a>
       </nav>
     </div>
   </header>
 
   <main id="main" class="card" style="margin: 2rem auto; max-width: 850px;">
-    <h2>Panduan Aksesibilitas & Pembaca Layar</h2>
-    <p>Read Aloud Planner dirancang dari awal untuk penyandang disabilitas netra, penglihatan rendah (low vision), dan pengguna keyboard murni tanpa ketergantungan pada tetikus (mouse).</p>
+    <h2>Accessibility & Screen Reader Guide</h2>
+    <p>Read Aloud Planner is engineered from the ground up for individuals with visual impairments, low vision, severe dyslexia, and keyboard-only users without any reliance on a mouse.</p>
 
-    <h3>Daftar Pintasan Keyboard</h3>
-    <table aria-label="Tabel Pintasan Keyboard">
+    <h3>Keyboard Shortcuts</h3>
+    <table aria-label="Keyboard Shortcuts Table">
       <thead>
         <tr>
-          <th scope="col">Tombol</th>
-          <th scope="col">Fungsi</th>
+          <th scope="col">Key</th>
+          <th scope="col">Action</th>
         </tr>
       </thead>
       <tbody>
         <tr>
           <td><kbd>V</kbd></td>
-          <td>Aktifkan input suara (Speech Recognition) untuk menambahkan kegiatan otomatis tanpa mengetik.</td>
+          <td>Activate Speech Recognition to add tasks naturally by voice without typing.</td>
         </tr>
         <tr>
           <td><kbd>S</kbd></td>
-          <td>Mulai atau hentikan pembacaan suara linear untuk seluruh jadwal hari yang dipilih.</td>
+          <td>Start or stop sequential linear speech reading of the entire day's schedule.</td>
         </tr>
         <tr>
           <td><kbd>D</kbd></td>
-          <td>Tandai kegiatan yang sedang aktif atau difokuskan sebagai selesai/belum selesai.</td>
+          <td>Toggle completion status of the active or currently focused task.</td>
         </tr>
         <tr>
           <td><kbd>N</kbd></td>
-          <td>Buka formulir dialog untuk menambah kegiatan baru.</td>
+          <td>Open dialog modal to add a new task manually.</td>
         </tr>
         <tr>
           <td><kbd>Esc</kbd></td>
-          <td>Tutup dialog pop-up atau keluar dari Mode Fokus.</td>
+          <td>Close dialog modals or exit Focus Mode.</td>
         </tr>
         <tr>
           <td><kbd>Tab</kbd> / <kbd>Shift + Tab</kbd></td>
-          <td>Pindah fokus navigasi antar elemen interaktif secara linear dan terprediksi.</td>
+          <td>Move keyboard focus linearly and predictably between interactive controls.</td>
         </tr>
       </tbody>
     </table>
 
-    <h3>Mode Bantuan Ketuk Ganda (Untuk Tunanetra)</h3>
-    <p>Untuk memudahkan pengguna tunanetra di perangkat layar sentuh maupun tetikus tanpa risiko salah tekan:</p>
+    <h3>Two-Tap Blind Assist Mode (TalkBack & VoiceOver Style)</h3>
+    <p>Designed specifically to assist visually impaired individuals on touchscreens and mouse devices without accidental clicks:</p>
     <ul>
-      <li><strong>Ketuk 1 Kali:</strong> Membacakan suara nama tombol/elemen dan fungsinya tanpa langsung mengeksekusi.</li>
-      <li><strong>Ketuk 2 Kali (Cepat):</strong> Menjalankan fungsi tombol yang dipilih.</li>
-      <li>Bantuan ini aktif secara bawaan dan dapat dialihkan sewaktu-waktu melalui tombol <strong>"Ketuk Ganda"</strong> di bilah navigasi atas.</li>
+      <li><strong>Single Tap / Click:</strong> Speaks the name of the button and its function aloud without executing it.</li>
+      <li><strong>Double Tap / Click:</strong> Executes the selected feature or action immediately.</li>
+      <li>This assistance mode is active by default and can be toggled at any time using the <strong>"Double Tap"</strong> button in the navigation bar.</li>
     </ul>
 
-    <h3>Panduan Pembaca Layar (Screen Reader)</h3>
-    <p>Aplikasi ini kompatibel secara penuh dengan pembaca layar modern seperti <strong>NVDA</strong>, <strong>JAWS</strong>, <strong>VoiceOver (macOS / iOS)</strong>, dan <strong>TalkBack (Android)</strong>.</p>
+    <h3>Multilingual Support</h3>
+    <p>Read Aloud Planner seamlessly supports both <strong>English</strong> and <strong>Bahasa Indonesia</strong>. Switching the language dropdown instantly translates all user interface labels, switches linear speech sentences, re-tunes speech recognition, and updates accessibility voice announcements.</p>
+
+    <h3>Screen Reader Compatibility</h3>
+    <p>The application is fully audited and compatible with modern screen readers including <strong>NVDA</strong>, <strong>JAWS</strong>, <strong>VoiceOver (macOS / iOS)</strong>, and <strong>TalkBack (Android)</strong>.</p>
     <ul>
-      <li><strong>Landmark Semantik:</strong> Seluruh area aplikasi diidentifikasi menggunakan elemen semantik HTML5 standar (Header, Main, Nav, Section, Dialog) sehingga Anda dapat melompat antar bagian menggunakan tombol pintasan pembaca layar Anda.</li>
-      <li><strong>Format Kalimat Linear:</strong> Setiap kegiatan dirangkum dalam kalimat waktu lengkap yang teratur (contoh: <em>"Senin, 08.00, Kuliah Basis Data, 2 jam, ruang 301. ✓ Selesai"</em>), menghindari kebingungan navigasi sel kisi kalender visual.</li>
-      <li><strong>Pemberitahuan Dinamis (ARIA Live):</strong> Pembaruan status (seperti kegiatan baru ditambahkan, dihapus, atau ditandai selesai) diumumkan secara sopan (polite live region) agar tidak memotong ucapan screen reader Anda saat sedang mengetik.</li>
-      <li><strong>Teks Takarir Suara (Caption Fallback):</strong> Jika browser tidak mendukung Web Speech API atau suara dimatikan, teks pembacaan tetap ditampilkan di area status takarir visual.</li>
+      <li><strong>Semantic Landmarks:</strong> All layout areas utilize semantic HTML5 elements (Header, Main, Nav, Section, Dialog) to allow instant landmark jumping.</li>
+      <li><strong>Linear Time Sentences:</strong> Replaces visual grid matrices with natural, complete sentences (e.g., <em>"Monday, 08:00, Database Architecture Lecture, 2 hours, Room 301. Completed."</em>).</li>
+      <li><strong>ARIA Live Announcements:</strong> Dynamic schedule mutations (task added, marked done, or deleted) are announced via polite live regions without interrupting current user speech.</li>
+      <li><strong>Textual Caption Fallback:</strong> Visual caption box displays all spoken speech synchronously in real time.</li>
     </ul>
 
-    <h3>Komitmen Standar WCAG 2.2 Level AA</h3>
-    <p>Read Aloud Planner memenuhi standar Web Content Accessibility Guidelines (WCAG) 2.2 Level AA:</p>
+    <h3>WCAG 2.2 Level AA Compliance</h3>
+    <p>Read Aloud Planner satisfies Web Content Accessibility Guidelines (WCAG) 2.2 Level AA requirements:</p>
     <ul>
-      <li><strong>Rasio Kontras Warna (Kriteria 1.4.3 & 1.4.11):</strong> Rasio kontras teks biasa minimal 4.5:1 terhadap latar belakang. Komponen antarmuka pengguna memiliki rasio kontras minimal 3:1. Tersedia pula <strong>Mode Kontras Tinggi</strong> untuk tampilan hitam-kuning monokrom.</li>
-      <li><strong>Indikator Fokus Visual (Kriteria 2.4.7 & 2.4.11):</strong> Elemen interaktif yang menerima fokus keyboard ditandai dengan garis batas solid tebal 3 piksel dengan jarak offset 3 piksel.</li>
-      <li><strong>Ukuran Target Sentuh (Kriteria 2.5.8):</strong> Seluruh tombol, bidang masukan formulir, dan tautan memiliki dimensi fisik minimal 44x44 piksel.</li>
-      <li><strong>Tipografi Fleksibel:</strong> Ukuran font dapat diperbesar hingga 200% tanpa kehilangan konten atau fungsionalitas aplikasi.</li>
+      <li><strong>Contrast Ratio (Criteria 1.4.3 & 1.4.11):</strong> Text contrast ratio is ≥ 4.5:1, and user interface controls are ≥ 3:1. High Contrast theme provides pure black and luminous amber styling.</li>
+      <li><strong>Focus Rings (Criteria 2.4.7 & 2.4.11):</strong> Interactive elements feature a solid 3px outline with a 3px offset.</li>
+      <li><strong>Target Size (Criterion 2.5.8):</strong> All buttons and touch targets meet the minimum 44x44px boundary.</li>
+      <li><strong>Responsive Typography:</strong> Fluid text scales up to 200% without breaking page layout.</li>
     </ul>
 
     <p style="margin-top: 2rem;">
-      <a href="/" class="btn-primary" style="display:inline-block; text-decoration:none;">Kembali ke Jadwal Utama</a>
+      <a href="/" class="btn-primary" style="display:inline-block; text-decoration:none;">Return to Schedule</a>
     </p>
   </main>
 </body>

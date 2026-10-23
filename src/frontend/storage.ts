@@ -12,7 +12,7 @@ export interface ActivityItem {
   linear_sentence: string;
 }
 
-const STORAGE_KEY = 'readaloud_activities_v1';
+const STORAGE_KEY = 'readaloud_activities_v3';
 
 export class LocalStorageRepository {
   private storage: Storage;
@@ -44,60 +44,60 @@ export class LocalStorageRepository {
       const seedActivities: ActivityItem[] = [
         {
           id: 'seed-1',
-          title: 'Kuliah Basis Data',
+          title: 'Database Architecture Lecture',
           date: today,
           start_time: '08:00',
           duration_min: 120,
-          location: 'ruang 301',
-          notes: 'Membahas normalisasi basis data relasional.',
+          location: 'Room 301',
+          notes: 'Relational normalization principles.',
           done: false,
           linear_sentence: formatLinearSentence({
-            title: 'Kuliah Basis Data',
+            title: 'Database Architecture Lecture',
             date: today,
             start_time: '08:00',
             duration_min: 120,
-            location: 'ruang 301',
-            notes: 'Membahas normalisasi basis data relasional.',
+            location: 'Room 301',
+            notes: 'Relational normalization principles.',
             done: false
-          }, 'id')
+          }, 'en')
         },
         {
           id: 'seed-2',
-          title: 'Konsultasi Dosen Pembimbing',
+          title: 'Faculty Advisor Consultation',
           date: today,
           start_time: '13:00',
           duration_min: 30,
-          location: 'ruang 204',
-          notes: 'Diskusi rencana skripsi aksesibilitas.',
+          location: 'Room 204',
+          notes: 'Discussion on accessible interfaces thesis.',
           done: false,
           linear_sentence: formatLinearSentence({
-            title: 'Konsultasi Dosen Pembimbing',
+            title: 'Faculty Advisor Consultation',
             date: today,
             start_time: '13:00',
             duration_min: 30,
-            location: 'ruang 204',
-            notes: 'Diskusi rencana skripsi aksesibilitas.',
+            location: 'Room 204',
+            notes: 'Discussion on accessible interfaces thesis.',
             done: false
-          }, 'id')
+          }, 'en')
         },
         {
           id: 'seed-3',
-          title: 'Tugas Kelompok Jaringan',
+          title: 'Network Group Assignment',
           date: today,
           start_time: '16:00',
           duration_min: 90,
-          location: 'Perpustakaan',
-          notes: 'Simulasi konfigurasi routing IPv6.',
+          location: 'Library Lab',
+          notes: 'IPv6 routing topology simulation.',
           done: true,
           linear_sentence: formatLinearSentence({
-            title: 'Tugas Kelompok Jaringan',
+            title: 'Network Group Assignment',
             date: today,
             start_time: '16:00',
             duration_min: 90,
-            location: 'Perpustakaan',
-            notes: 'Simulasi konfigurasi routing IPv6.',
+            location: 'Library Lab',
+            notes: 'IPv6 routing topology simulation.',
             done: true
-          }, 'id')
+          }, 'en')
         }
       ];
       this.storage.setItem(STORAGE_KEY, JSON.stringify(seedActivities));
@@ -113,11 +113,23 @@ export class LocalStorageRepository {
     }
   }
 
-  public getActivitiesByDate(date: string): ActivityItem[] {
+  public getActivitiesByDate(date: string, lang: 'id' | 'en' = 'en'): ActivityItem[] {
     const all = this.getAll();
     return all
       .filter((a) => a.date === date)
-      .sort((a, b) => a.start_time.localeCompare(b.start_time));
+      .sort((a, b) => a.start_time.localeCompare(b.start_time))
+      .map((row) => ({
+        ...row,
+        linear_sentence: formatLinearSentence({
+          title: row.title,
+          date: row.date,
+          start_time: row.start_time,
+          duration_min: row.duration_min,
+          location: row.location,
+          notes: row.notes,
+          done: row.done
+        }, lang)
+      }));
   }
 
   public addActivity(input: {
@@ -127,7 +139,7 @@ export class LocalStorageRepository {
     duration_min: number;
     location?: string;
     notes?: string;
-  }): ActivityItem {
+  }, lang: 'id' | 'en' = 'en'): ActivityItem {
     const all = this.getAll();
     const id = 'act-' + Date.now() + '-' + Math.random().toString(36).substring(2, 7);
     const location = input.location || '';
@@ -140,7 +152,7 @@ export class LocalStorageRepository {
       location,
       notes,
       done: false
-    }, 'id');
+    }, lang);
 
     const newItem: ActivityItem = {
       id,
@@ -159,7 +171,7 @@ export class LocalStorageRepository {
     return newItem;
   }
 
-  public updateActivity(id: string, updates: Partial<ActivityItem>): ActivityItem | null {
+  public updateActivity(id: string, updates: Partial<ActivityItem>, lang: 'id' | 'en' = 'en'): ActivityItem | null {
     const all = this.getAll();
     const idx = all.findIndex((a) => a.id === id);
     if (idx === -1) return null;
@@ -178,7 +190,7 @@ export class LocalStorageRepository {
       location: updated.location,
       notes: updated.notes,
       done: updated.done
-    }, 'id');
+    }, lang);
 
     all[idx] = updated;
     this.storage.setItem(STORAGE_KEY, JSON.stringify(all));

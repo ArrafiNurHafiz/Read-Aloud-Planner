@@ -3,6 +3,7 @@ import { SpeechCoordinator } from './speech.js';
 import { LocalStorageRepository, type ActivityItem } from './storage.js';
 import { VoiceInputController } from './voice_input.js';
 import { DoubleTapManager } from './double_tap_assist.js';
+import { DICTIONARY, type SupportedLang, type Translations } from './i18n.js';
 
 export function playEarcon(type: 'tap' | 'success' | 'warning' | 'alert') {
   try {
@@ -72,16 +73,179 @@ function unlockAudio() {
   }
 }
 
+// Global active language (default English)
+let currentLang: SupportedLang = 'en';
+if (typeof window !== 'undefined' && window.localStorage) {
+  const saved = window.localStorage.getItem('readaloud_lang') as SupportedLang | null;
+  if (saved === 'id' || saved === 'en') {
+    currentLang = saved;
+  }
+}
+
 const storageRepo = new LocalStorageRepository();
 const speech = new SpeechCoordinator();
 const voiceInput = new VoiceInputController();
-const doubleTap = new DoubleTapManager(true); // Active by default for blind/assistive users
+const doubleTap = new DoubleTapManager(true, currentLang);
 
 let currentActivities: ActivityItem[] = [];
 let focusIndex = 0;
 let isReadingAll = false;
 let fontSizeStep = 0; // 0: standard (18px), 1: large (22px), 2: xlarge (26px)
 let pendingDeleteId: string | null = null;
+
+export function getT(): Translations {
+  return DICTIONARY[currentLang];
+}
+
+export function applyLanguage(lang: SupportedLang): void {
+  currentLang = lang;
+  if (typeof window !== 'undefined' && window.localStorage) {
+    window.localStorage.setItem('readaloud_lang', lang);
+  }
+
+  const t = DICTIONARY[lang];
+  document.documentElement.lang = lang;
+  document.title = t.docTitle;
+
+  // Header and Navigation
+  const skipLink = document.getElementById('skip-link');
+  if (skipLink) skipLink.textContent = t.skipLink;
+
+  const appHeading = document.getElementById('app-heading');
+  if (appHeading) appHeading.textContent = t.appTitle;
+
+  const btnContrast = document.getElementById('btn-toggle-contrast');
+  if (btnContrast) {
+    const isHC = document.body.classList.contains('high-contrast');
+    btnContrast.textContent = isHC ? t.btnContrastActive : t.btnContrast;
+  }
+
+  const btnFont = document.getElementById('btn-font-size');
+  if (btnFont) {
+    if (fontSizeStep === 0) btnFont.textContent = t.btnFontMedium;
+    else if (fontSizeStep === 1) btnFont.textContent = t.btnFontLarge;
+    else btnFont.textContent = t.btnFontXLarge;
+  }
+
+  const selectLang = document.getElementById('select-speech-lang') as HTMLSelectElement | null;
+  if (selectLang) {
+    selectLang.value = lang === 'en' ? 'en-US' : 'id-ID';
+  }
+
+  const linkHelp = document.getElementById('link-help');
+  if (linkHelp) linkHelp.textContent = t.navHelp;
+
+  const linkApk = document.getElementById('link-apk');
+  if (linkApk) linkApk.textContent = t.navApk;
+
+  const linkDemo = document.getElementById('link-demo');
+  if (linkDemo) linkDemo.textContent = t.navDemo;
+
+  const btnDT = document.getElementById('btn-toggle-double-tap');
+  if (btnDT) {
+    btnDT.textContent = doubleTap.isEnabled() ? t.btnDoubleTapActive : t.btnDoubleTapInactive;
+    btnDT.setAttribute('aria-label', doubleTap.isEnabled() ? `${t.btnDoubleTapActive}, click to toggle` : `${t.btnDoubleTapInactive}, click to toggle`);
+  }
+
+  const btnTestAudio = document.getElementById('btn-test-audio');
+  if (btnTestAudio) btnTestAudio.textContent = t.btnTestAudio;
+
+  // Planner Toolbar
+  const plannerHeading = document.getElementById('planner-heading');
+  if (plannerHeading) plannerHeading.textContent = t.plannerHeading;
+
+  const lblDate = document.getElementById('label-date-select');
+  if (lblDate) lblDate.textContent = t.dateLabel;
+
+  const txtVoiceAdd = document.getElementById('text-voice-add');
+  if (txtVoiceAdd) txtVoiceAdd.textContent = lang === 'en' ? 'Voice Add' : 'Tambah via Suara';
+
+  const txtReadAll = document.getElementById('text-read-all');
+  if (txtReadAll) txtReadAll.textContent = lang === 'en' ? 'Read Schedule' : 'Bacakan Jadwal';
+
+  const btnStop = document.getElementById('btn-stop-speech');
+  if (btnStop) btnStop.textContent = t.btnStopSpeech;
+
+  const btnFocus = document.getElementById('btn-focus-mode');
+  if (btnFocus) {
+    const isFocusVisible = document.getElementById('focus-section')?.style.display !== 'none';
+    btnFocus.textContent = isFocusVisible ? t.btnExitFocus : t.btnFocusMode;
+  }
+
+  const txtManualAdd = document.getElementById('text-manual-add');
+  if (txtManualAdd) txtManualAdd.textContent = lang === 'en' ? 'Manual Input' : 'Ketik Manual';
+
+  // Subtitle Box
+  const captionEl = document.getElementById('speech-caption-text');
+  if (captionEl && (captionEl.textContent?.includes('Ready') || captionEl.textContent?.includes('Siap'))) {
+    captionEl.textContent = t.captionReady;
+  }
+
+  // Focus Mode Elements
+  const focusTitle = document.getElementById('focus-title');
+  if (focusTitle) focusTitle.textContent = t.focusTitle;
+
+  const btnFocusPrev = document.getElementById('btn-focus-prev');
+  if (btnFocusPrev) btnFocusPrev.textContent = t.btnPrev;
+
+  const txtFocusDone = document.getElementById('text-focus-done');
+  if (txtFocusDone) txtFocusDone.textContent = t.btnMarkDone;
+
+  const btnFocusNext = document.getElementById('btn-focus-next');
+  if (btnFocusNext) btnFocusNext.textContent = t.btnNext;
+
+  const txtFocusExit = document.getElementById('text-focus-exit');
+  if (txtFocusExit) txtFocusExit.textContent = lang === 'en' ? 'Exit' : 'Keluar';
+
+  // Add Task Dialog Elements
+  const dlgAddTitle = document.getElementById('dialog-add-title');
+  if (dlgAddTitle) dlgAddTitle.textContent = t.dialogAddTitle;
+
+  const lblActTitle = document.getElementById('lbl-act-title');
+  if (lblActTitle) lblActTitle.textContent = t.labelTaskTitle;
+
+  const lblActDate = document.getElementById('lbl-act-date');
+  if (lblActDate) lblActDate.textContent = t.labelDate;
+
+  const lblActTime = document.getElementById('lbl-act-time');
+  if (lblActTime) lblActTime.textContent = t.labelStartTime;
+
+  const lblActDur = document.getElementById('lbl-act-duration');
+  if (lblActDur) lblActDur.textContent = t.labelDuration;
+
+  const lblActLoc = document.getElementById('lbl-act-location');
+  if (lblActLoc) lblActLoc.textContent = t.labelLocation;
+
+  const lblActNotes = document.getElementById('lbl-act-notes');
+  if (lblActNotes) lblActNotes.textContent = t.labelNotes;
+
+  const btnSave = document.getElementById('btn-save-task');
+  if (btnSave) btnSave.textContent = t.btnSaveTask;
+
+  const txtCancelAdd = document.getElementById('text-cancel-add');
+  if (txtCancelAdd) txtCancelAdd.textContent = lang === 'en' ? 'Cancel' : 'Batal';
+
+  // Delete Dialog Elements
+  const dlgDelTitle = document.getElementById('dialog-confirm-delete');
+  if (dlgDelTitle) dlgDelTitle.textContent = t.dialogDeleteTitle;
+
+  const dlgDelMsg = document.getElementById('dialog-confirm-msg');
+  if (dlgDelMsg) dlgDelMsg.textContent = t.dialogDeleteMsg;
+
+  const btnDelYes = document.getElementById('btn-confirm-delete-yes');
+  if (btnDelYes) btnDelYes.textContent = t.btnDeleteYes;
+
+  const txtCancelDel = document.getElementById('text-cancel-del');
+  if (txtCancelDel) txtCancelDel.textContent = lang === 'en' ? 'Cancel' : 'Batal';
+
+  // Sync Coordinators
+  speech.setLanguage(lang === 'en' ? 'en-US' : 'id-ID');
+  voiceInput.setLanguage(lang === 'en' ? 'en-US' : 'id-ID');
+  doubleTap.setLanguage(lang);
+
+  // Re-render activities with dynamic translated sentences
+  loadActivities();
+}
 
 async function loadActivities(targetDate?: string): Promise<void> {
   const dateInput = document.getElementById('input-date') as HTMLInputElement | null;
@@ -102,24 +266,28 @@ async function loadActivities(targetDate?: string): Promise<void> {
       const data = await res.json();
       currentActivities = data.activities || [];
     } else {
-      currentActivities = storageRepo.getActivitiesByDate(date);
+      currentActivities = storageRepo.getActivitiesByDate(date, currentLang);
     }
   } catch {
-    currentActivities = storageRepo.getActivitiesByDate(date);
+    currentActivities = storageRepo.getActivitiesByDate(date, currentLang);
   }
 
   renderActivities();
-  announce(`Jadwal tanggal ${date} dimuat. Terdapat ${currentActivities.length} kegiatan.`);
+  const announceMsg = currentLang === 'en'
+    ? `Schedule for ${date} loaded. There are ${currentActivities.length} tasks.`
+    : `Jadwal tanggal ${date} dimuat. Terdapat ${currentActivities.length} kegiatan.`;
+  announce(announceMsg);
 }
 
 function renderActivities(): void {
   const listEl = document.getElementById('activities-list');
   if (!listEl) return;
   listEl.innerHTML = '';
+  const t = getT();
 
   if (currentActivities.length === 0) {
     const emptyLi = document.createElement('li');
-    emptyLi.innerHTML = '<p>Tidak ada kegiatan untuk hari ini. Gunakan "Tambah via Suara" atau "Ketik Manual".</p>';
+    emptyLi.innerHTML = `<p>${t.emptyList}</p>`;
     listEl.appendChild(emptyLi);
     return;
   }
@@ -128,7 +296,7 @@ function renderActivities(): void {
     const li = document.createElement('li');
     li.className = `activity-linear-item ${act.done ? 'done-item' : ''}`;
     li.setAttribute('tabindex', '0');
-    li.setAttribute('aria-label', `Kegiatan ${idx + 1}: ${act.linear_sentence}`);
+    li.setAttribute('aria-label', `${currentLang === 'en' ? 'Task' : 'Kegiatan'} ${idx + 1}: ${act.linear_sentence}`);
     li.dataset.id = act.id;
 
     const sentence = document.createElement('p');
@@ -142,7 +310,7 @@ function renderActivities(): void {
     const btnDone = document.createElement('button');
     btnDone.type = 'button';
     btnDone.className = 'btn-secondary';
-    btnDone.textContent = act.done ? 'Tandai Belum Selesai' : 'Tandai Selesai';
+    btnDone.textContent = act.done ? t.btnMarkIncomplete : t.btnMarkDone;
     btnDone.onclick = (e) => {
       e.stopPropagation();
       toggleDone(act.id, !act.done);
@@ -151,7 +319,7 @@ function renderActivities(): void {
     const btnSpeak = document.createElement('button');
     btnSpeak.type = 'button';
     btnSpeak.className = 'btn-secondary';
-    btnSpeak.textContent = 'Bacakan';
+    btnSpeak.textContent = t.btnSpeak;
     btnSpeak.onclick = (e) => {
       e.stopPropagation();
       playEarcon('tap');
@@ -161,7 +329,7 @@ function renderActivities(): void {
     const btnDel = document.createElement('button');
     btnDel.type = 'button';
     btnDel.className = 'btn-danger';
-    btnDel.textContent = 'Hapus';
+    btnDel.textContent = t.btnDelete;
     btnDel.onclick = (e) => {
       e.stopPropagation();
       deleteActivity(act.id);
@@ -177,7 +345,7 @@ function renderActivities(): void {
 }
 
 async function toggleDone(id: string, newDone: boolean): Promise<void> {
-  storageRepo.updateActivity(id, { done: newDone });
+  storageRepo.updateActivity(id, { done: newDone }, currentLang);
   fetch(`/api/activities/${id}`, {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },
@@ -185,7 +353,10 @@ async function toggleDone(id: string, newDone: boolean): Promise<void> {
   }).catch(() => {});
 
   playEarcon(newDone ? 'success' : 'tap');
-  announce(newDone ? 'Kegiatan ditandai selesai.' : 'Kegiatan ditandai belum selesai.');
+  const msg = currentLang === 'en'
+    ? (newDone ? 'Task marked as completed.' : 'Task marked as incomplete.')
+    : (newDone ? 'Kegiatan ditandai selesai.' : 'Kegiatan ditandai belum selesai.');
+  announce(msg);
   await loadActivities();
 }
 
@@ -201,9 +372,10 @@ function deleteActivity(id: string): void {
 }
 
 function readAllActivities(): void {
+  const t = getT();
   if (currentActivities.length === 0) {
     playEarcon('tap');
-    speech.speak('Tidak ada kegiatan untuk dibacakan hari ini.');
+    speech.speak(t.captionNoTasks);
     return;
   }
 
@@ -224,13 +396,16 @@ function readAllActivities(): void {
       const btnReadAll = document.getElementById('btn-read-all');
       if (btnReadAll) btnReadAll.focus();
       playEarcon('success');
-      announce('Selesai membacakan seluruh kegiatan.');
+      announce(t.captionReadingComplete);
       return;
     }
 
     const act = currentActivities[index];
     index++;
-    announce(`Membacakan kegiatan ${index} dari ${currentActivities.length}: ${act.linear_sentence}`);
+    const readingAnnounce = currentLang === 'en'
+      ? `Reading task ${index} of ${currentActivities.length}: ${act.linear_sentence}`
+      : `Membacakan kegiatan ${index} dari ${currentActivities.length}: ${act.linear_sentence}`;
+    announce(readingAnnounce);
     speech.speak(act.linear_sentence, undefined, () => {
       setTimeout(speakNext, 300);
     });
@@ -240,6 +415,7 @@ function readAllActivities(): void {
 }
 
 function stopAllSpeech(): void {
+  const t = getT();
   isReadingAll = false;
   speech.stop();
   playEarcon('tap');
@@ -247,13 +423,14 @@ function stopAllSpeech(): void {
   if (btnStop) btnStop.style.display = 'none';
   const btnReadAll = document.getElementById('btn-read-all');
   if (btnReadAll) btnReadAll.focus();
-  announce('Pembacaan jadwal dihentikan.');
+  announce(t.captionStopped);
 }
 
 function openFocusMode(): void {
+  const t = getT();
   if (currentActivities.length === 0) {
     playEarcon('alert');
-    announce('Tidak ada kegiatan untuk Mode Fokus.', 'assertive');
+    announce(t.captionNoTasks, 'assertive');
     return;
   }
   playEarcon('tap');
@@ -273,7 +450,7 @@ function exitFocusMode(): void {
     focusSection.style.display = 'none';
     speech.stop();
     playEarcon('tap');
-    announce('Keluar dari mode fokus.');
+    announce(currentLang === 'en' ? 'Exited focus mode.' : 'Keluar dari mode fokus.');
     const btnFocus = document.getElementById('btn-focus-mode');
     if (btnFocus) btnFocus.focus();
   }
@@ -289,7 +466,10 @@ function updateFocusDisplay(): void {
   }
 
   speech.speak(act.linear_sentence);
-  announce(`Mode fokus. Kegiatan ${focusIndex + 1} dari ${currentActivities.length}: ${act.linear_sentence}`);
+  const msg = currentLang === 'en'
+    ? `Focus mode. Task ${focusIndex + 1} of ${currentActivities.length}: ${act.linear_sentence}`
+    : `Mode fokus. Kegiatan ${focusIndex + 1} dari ${currentActivities.length}: ${act.linear_sentence}`;
+  announce(msg);
 }
 
 // Global Keyboard Shortcuts
@@ -364,8 +544,8 @@ document.addEventListener('DOMContentLoaded', () => {
   document.addEventListener('click', unlockAudio, { once: true });
   document.addEventListener('touchstart', unlockAudio, { once: true });
 
-  // Direct load of activities on start
-  loadActivities();
+  // Apply default or stored language
+  applyLanguage(currentLang);
 
   // Two-Click / Double-Tap Interceptor for Visually Impaired Assistance
   document.addEventListener('click', (e) => {
@@ -411,21 +591,32 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  // Language Dropdown Selector
+  const selectLang = document.getElementById('select-speech-lang') as HTMLSelectElement | null;
+  selectLang?.addEventListener('change', () => {
+    const val = selectLang.value;
+    const newLang: SupportedLang = val.startsWith('id') ? 'id' : 'en';
+    applyLanguage(newLang);
+    playEarcon('success');
+    const msg = newLang === 'en' ? 'Language switched to English.' : 'Bahasa diubah ke Indonesia.';
+    speech.speak(msg);
+    announce(msg);
+  });
+
   // Double-Tap Assist Toggle Button
   const btnToggleDT = document.getElementById('btn-toggle-double-tap');
   btnToggleDT?.addEventListener('click', () => {
     const newState = !doubleTap.isEnabled();
     doubleTap.setEnabled(newState);
     btnToggleDT.setAttribute('aria-pressed', String(newState));
-    btnToggleDT.textContent = newState ? 'Ketuk Ganda: Aktif' : 'Ketuk Ganda: Nonaktif';
+    const t = getT();
+    btnToggleDT.textContent = newState ? t.btnDoubleTapActive : t.btnDoubleTapInactive;
     btnToggleDT.setAttribute(
       'aria-label',
-      newState ? 'Bantuan Ketuk Ganda: Aktif, klik untuk nonaktifkan' : 'Bantuan Ketuk Ganda: Nonaktif, klik untuk aktifkan'
+      newState ? `${t.btnDoubleTapActive}, click to toggle` : `${t.btnDoubleTapInactive}, click to toggle`
     );
     playEarcon(newState ? 'success' : 'tap');
-    const msg = newState
-      ? 'Bantuan ketuk ganda diaktifkan. Klik sekali untuk mendengar fungsi, klik dua kali untuk menjalankan.'
-      : 'Bantuan ketuk ganda dinonaktifkan. Mode satu klik aktif.';
+    const msg = newState ? t.doubleTapActiveAnnounce : t.doubleTapNormalAnnounce;
     speech.speak(msg);
     announce(msg);
   });
@@ -442,20 +633,22 @@ document.addEventListener('DOMContentLoaded', () => {
       },
       (err) => {
         announce(err, 'assertive');
-      }
+      },
+      currentLang
     );
   });
 
   // Audio Test Button
   document.getElementById('btn-test-audio')?.addEventListener('click', () => {
+    const t = getT();
     unlockAudio();
     playEarcon('success');
-    speech.speak('Audio dan suara berfungsi dengan baik. Read Aloud Planner siap membacakan jadwal Anda.');
+    speech.speak(t.testAudioMessage);
     const captionEl = document.getElementById('speech-caption-text');
     if (captionEl) {
-      captionEl.textContent = 'Audio dan suara berfungsi dengan baik. Read Aloud Planner siap membacakan jadwal Anda.';
+      captionEl.textContent = t.testAudioMessage;
     }
-    announce('Audio dan suara berfungsi normal.');
+    announce(t.audioWorkingAnnounce);
   });
 
   // Date picker
@@ -512,6 +705,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const formAddActivity = document.getElementById('form-add-activity') as HTMLFormElement | null;
   formAddActivity?.addEventListener('submit', async (e) => {
     e.preventDefault();
+    const t = getT();
     const title = (document.getElementById('act-title') as HTMLInputElement).value;
     const date = (document.getElementById('act-date') as HTMLInputElement).value;
     const start_time = (document.getElementById('act-time') as HTMLInputElement).value;
@@ -526,7 +720,7 @@ document.addEventListener('DOMContentLoaded', () => {
       duration_min,
       location,
       notes
-    });
+    }, currentLang);
 
     fetch('/api/activities', {
       method: 'POST',
@@ -535,8 +729,11 @@ document.addEventListener('DOMContentLoaded', () => {
     }).catch(() => {});
 
     playEarcon('success');
-    announce(`Kegiatan ${title} berhasil ditambahkan.`);
-    speech.speak(`Kegiatan berhasil ditambahkan. ${newAct.linear_sentence}`);
+    announce(t.taskAddedManualAnnounce);
+    const confirmMsg = currentLang === 'en'
+      ? `Task added successfully. ${newAct.linear_sentence}`
+      : `Kegiatan berhasil ditambahkan. ${newAct.linear_sentence}`;
+    speech.speak(confirmMsg);
 
     if (dialogAdd) dialogAdd.close();
     formAddActivity.reset();
@@ -548,7 +745,9 @@ document.addEventListener('DOMContentLoaded', () => {
   btnContrast?.addEventListener('click', () => {
     const isHC = document.body.classList.toggle('high-contrast');
     btnContrast.setAttribute('aria-pressed', String(isHC));
-    announce(isHC ? 'Mode kontras tinggi aktif.' : 'Mode kontras standar aktif.');
+    const t = getT();
+    btnContrast.textContent = isHC ? t.btnContrastActive : t.btnContrast;
+    announce(isHC ? t.highContrastActiveAnnounce : t.highContrastNormalAnnounce);
   });
 
   // Font size toggle
@@ -556,21 +755,22 @@ document.addEventListener('DOMContentLoaded', () => {
   btnFontSize?.addEventListener('click', () => {
     fontSizeStep = (fontSizeStep + 1) % 3;
     document.body.classList.remove('font-large', 'font-xlarge');
+    const t = getT();
 
     if (fontSizeStep === 0) {
-      btnFontSize.textContent = 'Huruf: Sedang';
-      btnFontSize.setAttribute('aria-label', 'Huruf: Sedang, klik untuk ubah ukuran');
-      announce('Ukuran huruf diubah ke sedang.');
+      btnFontSize.textContent = t.btnFontMedium;
+      btnFontSize.setAttribute('aria-label', `${t.btnFontMedium}, click to toggle`);
+      announce(currentLang === 'en' ? 'Font size changed to medium.' : 'Ukuran huruf diubah ke sedang.');
     } else if (fontSizeStep === 1) {
       document.body.classList.add('font-large');
-      btnFontSize.textContent = 'Huruf: Besar';
-      btnFontSize.setAttribute('aria-label', 'Huruf: Besar, klik untuk ubah ukuran');
-      announce('Ukuran huruf diubah ke besar.');
+      btnFontSize.textContent = t.btnFontLarge;
+      btnFontSize.setAttribute('aria-label', `${t.btnFontLarge}, click to toggle`);
+      announce(currentLang === 'en' ? 'Font size changed to large.' : 'Ukuran huruf diubah ke besar.');
     } else {
       document.body.classList.add('font-xlarge');
-      btnFontSize.textContent = 'Huruf: Sangat Besar';
-      btnFontSize.setAttribute('aria-label', 'Huruf: Sangat Besar, klik untuk ubah ukuran');
-      announce('Ukuran huruf diubah ke sangat besar.');
+      btnFontSize.textContent = t.btnFontXLarge;
+      btnFontSize.setAttribute('aria-label', `${t.btnFontXLarge}, click to toggle`);
+      announce(currentLang === 'en' ? 'Font size changed to extra large.' : 'Ukuran huruf diubah ke sangat besar.');
     }
   });
 
@@ -579,16 +779,8 @@ document.addEventListener('DOMContentLoaded', () => {
   selectRate?.addEventListener('change', () => {
     const rate = parseFloat(selectRate.value);
     speech.setRate(rate);
-    announce(`Kecepatan pembacaan suara diubah ke ${rate} kali.`);
-  });
-
-  // Speech language dropdown
-  const selectLang = document.getElementById('select-speech-lang') as HTMLSelectElement | null;
-  selectLang?.addEventListener('change', () => {
-    const lang = selectLang.value;
-    speech.setLanguage(lang);
-    voiceInput.setLanguage(lang);
-    announce(lang === 'id-ID' ? 'Bahasa pembacaan diubah ke Indonesia.' : 'Speech language set to English.');
+    const msg = currentLang === 'en' ? `Speech speed set to ${rate}x.` : `Kecepatan pembacaan suara diubah ke ${rate} kali.`;
+    announce(msg);
   });
 
   // Confirm delete dialog listeners
@@ -603,7 +795,8 @@ document.addEventListener('DOMContentLoaded', () => {
     fetch(`/api/activities/${id}`, { method: 'DELETE' }).catch(() => {});
 
     playEarcon('success');
-    announce('Kegiatan berhasil dihapus.');
+    const t = getT();
+    announce(t.taskDeletedAnnounce);
     await loadActivities();
   });
 

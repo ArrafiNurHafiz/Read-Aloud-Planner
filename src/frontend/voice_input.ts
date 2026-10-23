@@ -14,7 +14,7 @@ declare global {
 export class VoiceInputController {
   private recognition: any = null;
   private isListening: boolean = false;
-  private lang: string = 'id-ID';
+  private lang: string = 'en-US';
 
   constructor() {
     if (typeof window !== 'undefined') {
@@ -44,10 +44,16 @@ export class VoiceInputController {
     speechCoord: SpeechCoordinator,
     playEarconFn: (type: 'tap' | 'success' | 'warning' | 'alert') => void,
     onSuccess: (newActivity: ActivityItem) => void,
-    onErrorStatus: (msg: string) => void
+    onErrorStatus: (msg: string) => void,
+    langCode: 'en' | 'id' = 'en'
   ): void {
+    const isEn = langCode === 'en';
+
     if (!this.recognition) {
-      onErrorStatus('Fitur pengenalan suara tidak didukung di peramban ini. Silakan gunakan formulir tambah kegiatan.');
+      const notSupportedMsg = isEn
+        ? 'Speech recognition is not supported in this browser. Please use manual input form.'
+        : 'Fitur pengenalan suara tidak didukung di peramban ini. Silakan gunakan formulir tambah kegiatan.';
+      onErrorStatus(notSupportedMsg);
       return;
     }
 
@@ -63,9 +69,11 @@ export class VoiceInputController {
 
       const captionEl = document.getElementById('speech-caption-text');
       if (captionEl) {
-        captionEl.textContent = 'Mendengarkan suara... Silakan sebutkan kegiatan (contoh: "Kuliah Basis Data jam 8 pagi 2 jam di ruang 301").';
+        captionEl.textContent = isEn
+          ? 'Listening for speech... Please say your task (e.g., "Database lecture tomorrow at 9 AM for 2 hours in room 301").'
+          : 'Mendengarkan suara... Silakan sebutkan kegiatan (contoh: "Kuliah Basis Data jam 8 pagi 2 jam di ruang 301").';
       }
-      announce('Mikrofon aktif. Silakan sebutkan jadwal kegiatan Anda.', 'assertive');
+      announce(isEn ? 'Microphone active. Please speak your schedule naturally.' : 'Mikrofon aktif. Silakan sebutkan jadwal kegiatan Anda.', 'assertive');
 
       const btnVoice = document.getElementById('btn-voice-add');
       if (btnVoice) {
@@ -82,23 +90,25 @@ export class VoiceInputController {
 
         const transcript = event.results[0][0].transcript;
         if (captionEl) {
-          captionEl.textContent = `Terdengar: "${transcript}". Memproses jadwal...`;
+          captionEl.textContent = isEn
+            ? `Heard: "${transcript}". Processing schedule...`
+            : `Terdengar: "${transcript}". Memproses jadwal...`;
         }
 
-        const parsed = parseVoiceSchedule(transcript);
+        const parsed = parseVoiceSchedule(transcript, new Date(), langCode);
         const newAct = storageRepo.addActivity({
           title: parsed.title,
           date: parsed.date,
           start_time: parsed.start_time,
           duration_min: parsed.duration_min,
           location: parsed.location
-        });
+        }, langCode);
 
         playEarconFn('success');
-        announce(`Kegiatan ${newAct.title} berhasil ditambahkan melalui suara.`);
+        announce(isEn ? `Task ${newAct.title} added successfully via voice.` : `Kegiatan ${newAct.title} berhasil ditambahkan melalui suara.`);
 
-        // Speak confirmation
-        speechCoord.speak(`Kegiatan berhasil ditambahkan. ${newAct.linear_sentence}`);
+        // Speak audio confirmation
+        speechCoord.speak(isEn ? `Task added successfully. ${newAct.linear_sentence}` : `Kegiatan berhasil ditambahkan. ${newAct.linear_sentence}`);
         onSuccess(newAct);
       };
 
@@ -109,9 +119,10 @@ export class VoiceInputController {
           btnVoice.setAttribute('aria-pressed', 'false');
         }
         playEarconFn('alert');
-        const err = event.error === 'not-allowed'
-          ? 'Izin mikrofon ditolak oleh peramban.'
-          : 'Suara tidak terdeteksi. Silakan coba lagi.';
+        let err = isEn ? 'No speech was detected. Please try again.' : 'Suara tidak terdeteksi. Silakan coba lagi.';
+        if (event.error === 'not-allowed') {
+          err = isEn ? 'Microphone permission was denied by browser.' : 'Izin mikrofon ditolak oleh peramban.';
+        }
         announce(err, 'assertive');
         onErrorStatus(err);
       };
@@ -125,10 +136,10 @@ export class VoiceInputController {
       };
 
       this.recognition.start();
-    } catch (e) {
+    } catch {
       this.isListening = false;
       playEarconFn('alert');
-      onErrorStatus('Gagal memulai mikrofon.');
+      onErrorStatus(isEn ? 'Failed to start microphone.' : 'Gagal memulai mikrofon.');
     }
   }
 

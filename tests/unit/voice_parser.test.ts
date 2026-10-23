@@ -55,4 +55,26 @@ describe('Voice Schedule Parser', () => {
     expect(result.duration_min).toBe(60);
     expect(result.location).toBe('');
   });
+
+  it('parses English speech: title, tomorrow, time AM/PM, duration and location', () => {
+    const speech = 'Database Lecture tomorrow at 9 AM for 2 hours in room 301';
+    const result = parseVoiceSchedule(speech, baseDate, 'en');
+
+    expect(result.title).toBe('Database Lecture');
+    expect(result.date).toBe('2026-10-27');
+    expect(result.start_time).toBe('09:00');
+    expect(result.duration_min).toBe(120);
+    expect(result.location).toBe('room 301');
+  });
+
+  it('parses English afternoon meeting with minutes duration', () => {
+    const speech = 'Project review at 2 PM for 30 minutes in Zoom';
+    const result = parseVoiceSchedule(speech, baseDate, 'en');
+
+    expect(result.title).toBe('Project review');
+    expect(result.date).toBe('2026-10-26');
+    expect(result.start_time).toBe('14:00');
+    expect(result.duration_min).toBe(30);
+    expect(result.location).toBe('Zoom');
+  });
 });

@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 
-test.describe('Keyboard-Only Workflow Verification', () => {
+test.describe('Keyboard-Only Workflow & Multilingual Verification', () => {
   test('skip link gains focus on Tab and scrolls to main content on Enter', async ({ page }) => {
     await page.goto('/');
     await page.keyboard.press('Tab');
@@ -22,7 +22,7 @@ test.describe('Keyboard-Only Workflow Verification', () => {
     await expect(page.locator('body')).toHaveClass(/high-contrast/);
 
     const politeAnnounce = page.locator('#live-polite');
-    await expect(politeAnnounce).toContainText('Mode kontras tinggi aktif');
+    await expect(politeAnnounce).toContainText(/High contrast|kontras/i);
   });
 
   test('shortcut N opens add activity dialog and Escape closes it', async ({ page }) => {
@@ -44,10 +44,25 @@ test.describe('Keyboard-Only Workflow Verification', () => {
     // 1st click: announces what the button does without executing
     await testAudioBtn.click();
     const caption = page.locator('#speech-caption-text');
-    await expect(caption).toContainText('Tombol Tes Suara');
+    await expect(caption).toContainText(/Test Audio Button|Tombol Tes Suara/i);
 
     // 2nd click: executes the feature
     await testAudioBtn.click();
-    await expect(caption).toContainText('Audio dan suara berfungsi dengan baik');
+    await expect(caption).toContainText(/Audio and voice|Audio dan suara/i);
+  });
+
+  test('language dropdown toggles UI and announcements between English and Indonesian', async ({ page }) => {
+    await page.goto('/');
+    const langSelect = page.locator('#select-speech-lang');
+
+    // Switch to Indonesian
+    await langSelect.selectOption('id-ID');
+    await expect(page.locator('#planner-heading')).toContainText('Jadwal Hari Ini');
+    await expect(page.locator('#btn-toggle-contrast')).toContainText('Kontras Tinggi');
+
+    // Switch back to English
+    await langSelect.selectOption('en-US');
+    await expect(page.locator('#planner-heading')).toContainText("Today's Schedule");
+    await expect(page.locator('#btn-toggle-contrast')).toContainText('High Contrast');
   });
 });
