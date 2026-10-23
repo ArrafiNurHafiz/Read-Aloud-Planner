@@ -5,7 +5,7 @@ import time
 import subprocess
 from playwright.async_api import async_playwright
 
-DURATION = 127  # Total duration in seconds matching narration
+DURATION = 114  # Total duration in seconds matching English narration (111.7s + 2.3s buffer)
 
 async def record():
     os.makedirs('demo_video/recordings', exist_ok=True)
@@ -35,17 +35,19 @@ async def record():
         await page.goto('http://localhost:3000/demo.html?autoplay=1')
         await page.wait_for_load_state('networkidle')
         
-        # Click start button if not already playing
-        try:
-            await page.click('button:has-text("MULAI DEMO")', timeout=3000)
-            print("Clicked MULAI DEMO button.")
-        except Exception as e:
-            print("Autoplay was already active or button not needed:", e)
+        await page.wait_for_timeout(1000)
+        is_paused = await page.evaluate("() => document.querySelector('audio')?.paused")
+        if is_paused:
+            print("Audio was paused, starting playback...")
+            await page.evaluate("() => document.querySelector('audio')?.play()")
+        else:
+            print("Audio is playing smoothly.")
             
         start_time = time.time()
         while time.time() - start_time < DURATION:
             elapsed = int(time.time() - start_time)
-            print(f"Recording progress: {elapsed}/{DURATION}s...", end='\r')
+            curr = await page.evaluate("() => document.querySelector('audio')?.currentTime")
+            print(f"Recording progress: {elapsed}/{DURATION}s (audio: {curr:.1f}s)...", end='\r')
             await asyncio.sleep(2)
             
         print(f"\nRecording completed ({DURATION}s). Finalizing video stream...")
@@ -59,9 +61,9 @@ async def record():
 
 def mux_and_master(raw_video_path):
     output_mp4 = "demo_video/ReadAloudPlanner_Demo_Video.mp4"
-    audio_path = "demo_video/audio/full_narration.mp3"
+    audio_path = "demo_video/audio/full_narration_en.mp3"
     
-    print("Muxing video with mastered audio narration via FFmpeg...")
+    print("Muxing video with mastered English audio narration via FFmpeg...")
     cmd = [
         "ffmpeg", "-y",
         "-i", raw_video_path,
@@ -82,6 +84,11 @@ def mux_and_master(raw_video_path):
     
     # Extract frames for visual QA
     print("Extracting representative keyframes for visual inspection...")
+    # Clean old frames
+    for f in os.listdir("demo_video/frames"):
+        if f.endswith(".png"):
+            os.remove(os.path.join("demo_video/frames", f))
+            
     frame_cmd = [
         "ffmpeg", "-y",
         "-i", output_mp4,

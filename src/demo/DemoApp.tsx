@@ -16,62 +16,62 @@ const SCENES: SceneInfo[] = [
   {
     id: 'scene1_intro',
     start: 0,
-    end: 28.2,
+    end: 24.2,
     title: 'Read Aloud Planner',
-    subtitle: 'Jadwal yang Bisa Didengar, Bukan Hanya Dilihat',
-    badge: 'INOVASI AKSESIBILITAS',
+    subtitle: 'A Schedule You Hear, Not Just See',
+    badge: 'ACCESSIBILITY INNOVATION',
     accent: '#38bdf8',
-    camera: { scale: 0.92, x: 0, y: -20, rotateX: 6, rotateY: 0 }
+    camera: { scale: 0.95, x: -160, y: -20, rotateX: 4, rotateY: 2 }
   },
   {
     id: 'scene2_zerologin',
-    start: 28.2,
-    end: 50.5,
+    start: 24.2,
+    end: 43.2,
     title: '100% Zero-Login Barrier-Free',
-    subtitle: 'Tanpa Login Wall • Langsung Siap Pakai • Mode Kontras Tinggi',
-    badge: 'BEBAS HAMBATAN',
+    subtitle: 'No Login Walls • Instantly Usable • High Contrast Mode',
+    badge: 'BARRIER-FREE ACCESS',
     accent: '#10b981',
-    camera: { scale: 1.22, x: -100, y: 80, rotateX: 0, rotateY: 0 }
+    camera: { scale: 1.12, x: -200, y: 60, rotateX: 0, rotateY: 0 }
   },
   {
     id: 'scene3_doubletap',
-    start: 50.5,
-    end: 68.5,
-    title: 'Mode Bantuan Ketuk Ganda',
-    subtitle: '1x Ketuk: Baca Fungsi Suara • 2x Ketuk: Eksekusi Fitur',
+    start: 43.2,
+    end: 59.4,
+    title: 'Two-Tap Blind Assist Mode',
+    subtitle: '1st Tap: Read Function Aloud • 2nd Tap: Execute Feature',
     badge: 'TALKBACK & VOICEOVER STYLE',
     accent: '#f59e0b',
-    camera: { scale: 1.35, x: 120, y: 110, rotateX: 0, rotateY: 0 }
+    camera: { scale: 1.2, x: -100, y: 60, rotateX: 0, rotateY: 0 }
   },
   {
     id: 'scene4_voiceinput',
-    start: 68.5,
-    end: 88.8,
-    title: 'Input Jadwal Cerdas Berbasis Suara',
-    subtitle: 'Speech-to-Text • Ekstraksi NLP Otomatis Judul, Waktu, Durasi & Lokasi',
+    start: 59.4,
+    end: 77.2,
+    title: 'Natural Voice Schedule Input',
+    subtitle: 'Speech-to-Text • Automated NLP Extraction of Title, Time, Duration & Room',
     badge: 'NATURAL VOICE AI',
     accent: '#ef4444',
-    camera: { scale: 1.28, x: -60, y: 70, rotateX: 0, rotateY: 0 }
+    camera: { scale: 1.15, x: -160, y: 50, rotateX: 0, rotateY: 0 }
   },
   {
     id: 'scene5_linearfocus',
-    start: 88.8,
-    end: 105.9,
-    title: 'Kalimat Linear & Mode Fokus',
-    subtitle: 'Satu Layar Satu Kegiatan • Eliminasi Cognitive Overload • Audio Sejati',
-    badge: 'DESAIN RAMAH DISLEKSIA',
+    start: 77.2,
+    end: 93.2,
+    title: 'Linear Sentences & Focus Mode',
+    subtitle: 'One Task Per Screen • Eliminates Cognitive Overload • True Audio',
+    badge: 'DYSLEXIA-FRIENDLY DESIGN',
     accent: '#a855f7',
-    camera: { scale: 1.24, x: 40, y: -40, rotateX: 0, rotateY: 0 }
+    camera: { scale: 1.12, x: -140, y: -20, rotateX: 0, rotateY: 0 }
   },
   {
     id: 'scene6_outro',
-    start: 105.9,
-    end: 127.0,
-    title: 'Audit WCAG 2.2 AA & Android APK',
-    subtitle: '0 Pelanggaran Kritis • PWA iPhone & APK Native 12MB Siap Pasang',
-    badge: 'SIAP PRODUKSI',
+    start: 93.2,
+    end: 112.5,
+    title: 'WCAG 2.2 AA Audit & Android APK',
+    subtitle: '0 Critical Violations • iOS PWA & 33MB Standalone Native APK Ready',
+    badge: 'PRODUCTION READY',
     accent: '#38bdf8',
-    camera: { scale: 0.95, x: 0, y: -10, rotateX: 4, rotateY: -2 }
+    camera: { scale: 0.95, x: -160, y: -10, rotateX: 2, rotateY: 0 }
   }
 ];
 
@@ -83,7 +83,7 @@ export const DemoApp: React.FC = () => {
   // Simulated internal state of the planner during demo
   const [isHighContrast, setIsHighContrast] = useState<boolean>(false);
   const [isFocusMode, setIsFocusMode] = useState<boolean>(false);
-  const [captionText, setCaptionText] = useState<string>('Siap membacakan jadwal.');
+  const [captionText, setCaptionText] = useState<string>('Ready to read schedule.');
   const [tapEffect, setTapEffect] = useState<{ type: 'first' | 'second'; text: string; x: number; y: number } | null>(null);
   const [voiceTypingText, setVoiceTypingText] = useState<string>('');
   const [addedVoiceItem, setAddedVoiceItem] = useState<boolean>(false);
@@ -94,67 +94,79 @@ export const DemoApp: React.FC = () => {
     if (params.get('autoplay') === '1' && audioRef.current) {
       audioRef.current.play().then(() => setIsPlaying(true)).catch(() => {});
     }
+
+    // High frequency time sync interval for buttery animations
+    const interval = setInterval(() => {
+      if (audioRef.current && !audioRef.current.paused) {
+        syncTime(audioRef.current.currentTime);
+      }
+    }, 100);
+
+    return () => clearInterval(interval);
   }, []);
+
+  const syncTime = (t: number) => {
+    setCurrentTime(t);
+
+    // Scene 2 automation: trigger high contrast at t ~ 30s to 43.2s
+    if (t >= 30 && t < 43.2) {
+      setIsHighContrast(true);
+    } else {
+      setIsHighContrast(false);
+    }
+
+    // Scene 3 automation: Double-Tap demo at t ~ 48s and t ~ 53s
+    if (t >= 48 && t < 53) {
+      setTapEffect({
+        type: 'first',
+        text: '1st Tap: "Voice Add Button. Double tap to speak."',
+        x: 160,
+        y: 230
+      });
+      setCaptionText('Voice Add Button. Double tap to start speaking your schedule.');
+    } else if (t >= 53 && t < 58) {
+      setTapEffect({
+        type: 'second',
+        text: '2nd Tap: [EXECUTE] Activating Microphone!',
+        x: 160,
+        y: 230
+      });
+      setCaptionText('Listening for speech... Please say your task.');
+    } else {
+      if (t < 59.4) setTapEffect(null);
+    }
+
+    // Scene 4 automation: Voice typing simulation at t ~ 64s to 76s
+    if (t >= 64 && t < 70) {
+      const fullPrompt = "Database Lecture tomorrow at 9 AM for 2 hours in room 301";
+      const progress = Math.min(1, (t - 64) / 5);
+      const chars = Math.floor(progress * fullPrompt.length);
+      setVoiceTypingText(fullPrompt.substring(0, chars));
+    } else if (t >= 70 && t < 77.2) {
+      setVoiceTypingText("Database Lecture tomorrow at 9 AM for 2 hours in room 301");
+      setAddedVoiceItem(true);
+      setCaptionText('Task added successfully: Tuesday, 09:00, Database Lecture, 2 hours, room 301.');
+    } else {
+      setVoiceTypingText(''); // Cleanly dismiss modal in scene 5 and 6
+    }
+
+    // Scene 5 automation: Focus mode at t >= 82s to 93.2s
+    if (t >= 82 && t < 93.2) {
+      setIsFocusMode(true);
+      setCaptionText('Focus mode. Task 1 of 4: Monday, 08:00, Database Architecture Lecture, 2 hours, Room 301.');
+    } else {
+      setIsFocusMode(false);
+    }
+  };
 
   const handleTimeUpdate = () => {
     if (audioRef.current) {
-      const t = audioRef.current.currentTime;
-      setCurrentTime(t);
-
-      // Scene 2 automation: trigger high contrast at t ~ 38s
-      if (t >= 38 && t < 50) {
-        setIsHighContrast(true);
-      } else {
-        setIsHighContrast(false);
-      }
-
-      // Scene 3 automation: Double-Tap demo at t ~ 56s and t ~ 61s
-      if (t >= 56 && t < 59) {
-        setTapEffect({
-          type: 'first',
-          text: '1x Ketuk: "Tombol Tambah via Suara. Ketuk dua kali untuk bicara."',
-          x: 480,
-          y: 280
-        });
-        setCaptionText('Tombol Tambah via Suara. Ketuk dua kali untuk mulai berbicara menambahkan jadwal.');
-      } else if (t >= 59 && t < 64) {
-        setTapEffect({
-          type: 'second',
-          text: '2x Ketuk: [EKSEKUSI] Menyalakan Mikrofon!',
-          x: 480,
-          y: 280
-        });
-        setCaptionText('Mendengarkan suara... Silakan sebutkan jadwal kegiatan.');
-      } else {
-        if (t < 68) setTapEffect(null);
-      }
-
-      // Scene 4 automation: Voice typing simulation at t ~ 73s to 82s
-      if (t >= 73 && t < 80) {
-        const fullPrompt = "Kuliah Pemrograman besok jam 9 pagi 2 jam di lab 1";
-        const progress = Math.min(1, (t - 73) / 5);
-        const chars = Math.floor(progress * fullPrompt.length);
-        setVoiceTypingText(fullPrompt.substring(0, chars));
-      } else if (t >= 80 && t < 88.8) {
-        setVoiceTypingText("Kuliah Pemrograman besok jam 9 pagi 2 jam di lab 1");
-        setAddedVoiceItem(true);
-        setCaptionText('Kegiatan berhasil ditambahkan: Selasa, 09.00, Kuliah Pemrograman, 2 jam, lab 1.');
-      } else {
-        setVoiceTypingText(''); // Cleanly dismiss modal in scene 5 and 6
-      }
-
-      // Scene 5 automation: Focus mode at t >= 93s
-      if (t >= 93 && t < 105.9) {
-        setIsFocusMode(true);
-        setCaptionText('Mode fokus. Kegiatan 1 dari 4: Senin, 08.00, Kuliah Basis Data, 2 jam, ruang 301.');
-      } else {
-        setIsFocusMode(false);
-      }
+      syncTime(audioRef.current.currentTime);
     }
   };
 
   const currentScene = SCENES.find((s) => currentTime >= s.start && currentTime < s.end) || SCENES[0];
-  const progressPercent = Math.min(100, (currentTime / 126.5) * 100);
+  const progressPercent = Math.min(100, (currentTime / 111.7) * 100);
 
   return (
     <div style={{
@@ -168,8 +180,10 @@ export const DemoApp: React.FC = () => {
       {/* Background Audio */}
       <audio
         ref={audioRef}
-        src="/full_narration.mp3"
+        src="/full_narration_en.mp3"
         onTimeUpdate={handleTimeUpdate}
+        onPlay={() => setIsPlaying(true)}
+        onPause={() => setIsPlaying(false)}
         onEnded={() => setIsPlaying(false)}
       />
 
@@ -229,7 +243,7 @@ export const DemoApp: React.FC = () => {
             borderRadius: 20
           }}>
             <span style={{ width: 10, height: 10, borderRadius: '50%', background: '#ef4444', boxShadow: '0 0 10px #ef4444' }} />
-            <span style={{ fontSize: 13, fontWeight: 800, letterSpacing: '0.1em', color: '#fca5a5' }}>REC • DEMO RESMI</span>
+            <span style={{ fontSize: 13, fontWeight: 800, letterSpacing: '0.1em', color: '#fca5a5' }}>REC • OFFICIAL DEMO</span>
           </div>
           <span style={{ fontSize: 20, fontWeight: 800, letterSpacing: '-0.02em', color: '#ffffff' }}>
             Read Aloud Planner <span style={{ color: currentScene.accent, fontWeight: 400 }}>v1.0</span>
@@ -263,9 +277,12 @@ export const DemoApp: React.FC = () => {
         <button
           onClick={() => {
             if (audioRef.current) {
-              if (isPlaying) audioRef.current.pause();
-              else audioRef.current.play();
-              setIsPlaying(!isPlaying);
+              if (isPlaying) {
+                audioRef.current.pause();
+                setIsPlaying(false);
+              } else {
+                audioRef.current.play().then(() => setIsPlaying(true)).catch(() => {});
+              }
             }
           }}
           style={{
@@ -280,7 +297,7 @@ export const DemoApp: React.FC = () => {
             transition: 'all 0.2s'
           }}
         >
-          {isPlaying ? '⏸ JEDA DEMO' : '▶ MULAI DEMO'}
+          {isPlaying ? '⏸ PAUSE DEMO' : '▶ START DEMO'}
         </button>
       </header>
 
@@ -317,8 +334,8 @@ export const DemoApp: React.FC = () => {
         >
           {/* Realistic High-Tech Device Browser Window */}
           <div style={{
-            width: 1200,
-            minHeight: 740,
+            width: 1050,
+            minHeight: 730,
             background: isHighContrast ? '#000000' : '#ffffff',
             color: isHighContrast ? '#ffffff' : '#0f172a',
             borderRadius: 20,
@@ -346,7 +363,7 @@ export const DemoApp: React.FC = () => {
               </div>
               <div style={{
                 flex: 1,
-                maxWidth: 480,
+                maxWidth: 440,
                 margin: '0 auto',
                 background: isHighContrast ? '#000000' : '#ffffff',
                 border: isHighContrast ? '1px solid #ffff00' : '1px solid #cbd5e1',
@@ -365,7 +382,7 @@ export const DemoApp: React.FC = () => {
             </div>
 
             {/* Application Mockup Content */}
-            <div style={{ padding: '24px 32px', flex: 1 }}>
+            <div style={{ padding: '24px 30px', flex: 1 }}>
               {/* App Header */}
               <div style={{
                 display: 'flex',
@@ -376,58 +393,58 @@ export const DemoApp: React.FC = () => {
                 marginBottom: 20
               }}>
                 <div>
-                  <h1 style={{ fontSize: 26, fontWeight: 900, margin: 0, color: isHighContrast ? '#ffff00' : '#0f172a' }}>
+                  <h1 style={{ fontSize: 24, fontWeight: 900, margin: 0, color: isHighContrast ? '#ffff00' : '#0f172a' }}>
                     Read Aloud Planner
                   </h1>
-                  <p style={{ fontSize: 14, margin: '4px 0 0', opacity: 0.85 }}>Jadwal yang bisa didengar, bukan hanya dilihat</p>
+                  <p style={{ fontSize: 13, margin: '4px 0 0', opacity: 0.85 }}>A schedule you hear, not just see</p>
                 </div>
-                <div style={{ display: 'flex', gap: 10 }}>
+                <div style={{ display: 'flex', gap: 8 }}>
                   <button style={{
-                    padding: '8px 16px',
+                    padding: '8px 14px',
                     borderRadius: 8,
                     fontWeight: 700,
-                    fontSize: 14,
+                    fontSize: 13,
                     background: isHighContrast ? '#ffff00' : '#0f172a',
                     color: isHighContrast ? '#000000' : '#ffffff',
                     border: 'none'
                   }}>
-                    {isHighContrast ? '✓ Kontras Tinggi' : 'Kontras Normal'}
+                    {isHighContrast ? '✓ High Contrast' : 'Standard Contrast'}
                   </button>
                   <button style={{
-                    padding: '8px 14px',
+                    padding: '8px 12px',
                     borderRadius: 8,
                     fontWeight: 700,
-                    fontSize: 14,
+                    fontSize: 13,
                     background: '#e2e8f0',
                     color: '#0f172a',
                     border: 'none'
                   }}>
-                    Ketuk Ganda: Aktif
+                    Double Tap: Active
                   </button>
                   <button style={{
-                    padding: '8px 14px',
+                    padding: '8px 12px',
                     borderRadius: 8,
                     fontWeight: 700,
-                    fontSize: 14,
+                    fontSize: 13,
                     background: '#e2e8f0',
                     color: '#0f172a',
                     border: 'none'
                   }}>
-                    Tes Suara
+                    Test Audio
                   </button>
                 </div>
               </div>
 
               {/* Toolbar Controls */}
-              <div style={{ display: 'flex', gap: 12, marginBottom: 20 }}>
+              <div style={{ display: 'flex', gap: 10, marginBottom: 20 }}>
                 <motion.button
-                  animate={currentTime >= 59 && currentTime < 64 ? { scale: [1, 1.05, 1], boxShadow: '0 0 25px #ef4444' } : {}}
+                  animate={currentTime >= 53 && currentTime < 58 ? { scale: [1, 1.05, 1], boxShadow: '0 0 25px #ef4444' } : {}}
                   transition={{ repeat: Infinity, duration: 1 }}
                   style={{
-                    padding: '12px 20px',
+                    padding: '10px 16px',
                     borderRadius: 10,
                     fontWeight: 800,
-                    fontSize: 15,
+                    fontSize: 14,
                     background: '#2563eb',
                     color: '#ffffff',
                     border: 'none',
@@ -436,40 +453,40 @@ export const DemoApp: React.FC = () => {
                     gap: 8
                   }}
                 >
-                  <span>🎤</span> Tambah via Suara (V)
+                  <span>🎤</span> Voice Add (V)
                 </motion.button>
                 <button style={{
-                  padding: '12px 20px',
+                  padding: '10px 16px',
                   borderRadius: 10,
                   fontWeight: 800,
-                  fontSize: 15,
+                  fontSize: 14,
                   background: '#0f172a',
                   color: '#ffffff',
                   border: 'none'
                 }}>
-                  Bacakan Jadwal (S)
+                  Read Schedule (S)
                 </button>
                 <button style={{
-                  padding: '12px 20px',
+                  padding: '10px 16px',
                   borderRadius: 10,
                   fontWeight: 700,
-                  fontSize: 15,
+                  fontSize: 14,
                   background: isFocusMode ? '#9333ea' : '#e2e8f0',
                   color: isFocusMode ? '#ffffff' : '#0f172a',
                   border: 'none'
                 }}>
-                  {isFocusMode ? 'Keluar Mode Fokus' : 'Mode Fokus'}
+                  {isFocusMode ? 'Exit Focus Mode' : 'Focus Mode'}
                 </button>
                 <button style={{
-                  padding: '12px 20px',
+                  padding: '10px 16px',
                   borderRadius: 10,
                   fontWeight: 700,
-                  fontSize: 15,
+                  fontSize: 14,
                   background: '#e2e8f0',
                   color: '#0f172a',
                   border: 'none'
                 }}>
-                  Ketik Manual (N)
+                  Manual Input (N)
                 </button>
               </div>
 
@@ -479,12 +496,12 @@ export const DemoApp: React.FC = () => {
                 color: isHighContrast ? '#ffff00' : '#0369a1',
                 border: isHighContrast ? '2px solid #ffff00' : '1px solid #bae6fd',
                 borderRadius: 10,
-                padding: '12px 20px',
-                fontSize: 15,
+                padding: '10px 16px',
+                fontSize: 14,
                 fontWeight: 700,
                 marginBottom: 20
               }}>
-                💬 Status Suara: {captionText}
+                💬 Voice Status: {captionText}
               </div>
 
               {/* Focus Mode Overlay OR Activities List */}
@@ -493,40 +510,40 @@ export const DemoApp: React.FC = () => {
                   background: isHighContrast ? '#0f172a' : '#f8fafc',
                   border: isHighContrast ? '3px solid #ffff00' : '2px solid #cbd5e1',
                   borderRadius: 16,
-                  padding: '40px 30px',
+                  padding: '36px 24px',
                   textAlign: 'center'
                 }}>
-                  <h3 style={{ fontSize: 28, fontWeight: 900, marginBottom: 16, color: '#9333ea' }}>
-                    🎯 Mode Fokus: Satu Kegiatan
+                  <h3 style={{ fontSize: 26, fontWeight: 900, marginBottom: 14, color: '#9333ea' }}>
+                    🎯 Focus Mode: One Task
                   </h3>
-                  <p style={{ fontSize: 24, fontWeight: 700, lineHeight: 1.5, marginBottom: 30 }}>
-                    "Senin, 08.00, Kuliah Basis Data, 2 jam, ruang 301."
+                  <p style={{ fontSize: 22, fontWeight: 700, lineHeight: 1.5, marginBottom: 26 }}>
+                    "Monday, 08:00, Database Architecture Lecture, 2 hours, Room 301."
                   </p>
-                  <div style={{ display: 'flex', justifyContent: 'center', gap: 16 }}>
-                    <button style={{ padding: '12px 24px', borderRadius: 10, fontWeight: 700, background: '#e2e8f0', border: 'none' }}>Sebelumnya</button>
-                    <button style={{ padding: '12px 24px', borderRadius: 10, fontWeight: 800, background: '#10b981', color: '#fff', border: 'none' }}>Tandai Selesai (D)</button>
-                    <button style={{ padding: '12px 24px', borderRadius: 10, fontWeight: 700, background: '#e2e8f0', border: 'none' }}>Berikutnya</button>
+                  <div style={{ display: 'flex', justifyContent: 'center', gap: 14 }}>
+                    <button style={{ padding: '10px 20px', borderRadius: 10, fontWeight: 700, background: '#e2e8f0', border: 'none' }}>Previous</button>
+                    <button style={{ padding: '10px 20px', borderRadius: 10, fontWeight: 800, background: '#10b981', color: '#fff', border: 'none' }}>Mark Done (D)</button>
+                    <button style={{ padding: '10px 20px', borderRadius: 10, fontWeight: 700, background: '#e2e8f0', border: 'none' }}>Next</button>
                   </div>
                 </div>
               ) : (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                   {/* Item 1 */}
                   <div style={{
                     background: isHighContrast ? '#000000' : '#f8fafc',
                     border: isHighContrast ? '2px solid #ffff00' : '2px solid #e2e8f0',
                     borderRadius: 12,
-                    padding: '16px 20px',
+                    padding: '14px 18px',
                     display: 'flex',
                     justifyContent: 'space-between',
                     alignItems: 'center'
                   }}>
-                    <p style={{ fontSize: 16, fontWeight: 700, margin: 0 }}>
-                      Senin, 08.00, Kuliah Basis Data, 2 jam, ruang 301.
+                    <p style={{ fontSize: 15, fontWeight: 700, margin: 0 }}>
+                      Monday, 08:00, Database Architecture Lecture, 2 hours, Room 301.
                     </p>
-                    <div style={{ display: 'flex', gap: 8 }}>
-                      <button style={{ padding: '6px 14px', borderRadius: 6, fontWeight: 700, background: '#e2e8f0', border: 'none' }}>Tandai Selesai</button>
-                      <button style={{ padding: '6px 14px', borderRadius: 6, fontWeight: 700, background: '#e2e8f0', border: 'none' }}>Bacakan</button>
-                      <button style={{ padding: '6px 14px', borderRadius: 6, fontWeight: 700, background: '#ef4444', color: '#fff', border: 'none' }}>Hapus</button>
+                    <div style={{ display: 'flex', gap: 6 }}>
+                      <button style={{ padding: '6px 12px', borderRadius: 6, fontWeight: 700, fontSize: 13, background: '#e2e8f0', border: 'none' }}>Mark Done</button>
+                      <button style={{ padding: '6px 12px', borderRadius: 6, fontWeight: 700, fontSize: 13, background: '#e2e8f0', border: 'none' }}>Speak</button>
+                      <button style={{ padding: '6px 12px', borderRadius: 6, fontWeight: 700, fontSize: 13, background: '#ef4444', color: '#fff', border: 'none' }}>Delete</button>
                     </div>
                   </div>
 
@@ -535,18 +552,18 @@ export const DemoApp: React.FC = () => {
                     background: isHighContrast ? '#000000' : '#f8fafc',
                     border: isHighContrast ? '2px solid #ffff00' : '2px solid #e2e8f0',
                     borderRadius: 12,
-                    padding: '16px 20px',
+                    padding: '14px 18px',
                     display: 'flex',
                     justifyContent: 'space-between',
                     alignItems: 'center'
                   }}>
-                    <p style={{ fontSize: 16, fontWeight: 700, margin: 0 }}>
-                      Senin, 13.00, Konsultasi Dosen Pembimbing, 30 menit, ruang 204.
+                    <p style={{ fontSize: 15, fontWeight: 700, margin: 0 }}>
+                      Monday, 13:00, Faculty Advisor Consultation, 30 minutes, Room 204.
                     </p>
-                    <div style={{ display: 'flex', gap: 8 }}>
-                      <button style={{ padding: '6px 14px', borderRadius: 6, fontWeight: 700, background: '#e2e8f0', border: 'none' }}>Tandai Selesai</button>
-                      <button style={{ padding: '6px 14px', borderRadius: 6, fontWeight: 700, background: '#e2e8f0', border: 'none' }}>Bacakan</button>
-                      <button style={{ padding: '6px 14px', borderRadius: 6, fontWeight: 700, background: '#ef4444', color: '#fff', border: 'none' }}>Hapus</button>
+                    <div style={{ display: 'flex', gap: 6 }}>
+                      <button style={{ padding: '6px 12px', borderRadius: 6, fontWeight: 700, fontSize: 13, background: '#e2e8f0', border: 'none' }}>Mark Done</button>
+                      <button style={{ padding: '6px 12px', borderRadius: 6, fontWeight: 700, fontSize: 13, background: '#e2e8f0', border: 'none' }}>Speak</button>
+                      <button style={{ padding: '6px 12px', borderRadius: 6, fontWeight: 700, fontSize: 13, background: '#ef4444', color: '#fff', border: 'none' }}>Delete</button>
                     </div>
                   </div>
 
@@ -559,18 +576,18 @@ export const DemoApp: React.FC = () => {
                         background: isHighContrast ? '#052e16' : '#ecfdf5',
                         border: '2px solid #10b981',
                         borderRadius: 12,
-                        padding: '16px 20px',
+                        padding: '14px 18px',
                         display: 'flex',
                         justifyContent: 'space-between',
                         alignItems: 'center'
                       }}
                     >
-                      <p style={{ fontSize: 16, fontWeight: 800, color: '#047857', margin: 0 }}>
-                        ✨ Selasa, 09.00, Kuliah Pemrograman, 2 jam, lab 1. (Ditambahkan via Suara)
+                      <p style={{ fontSize: 15, fontWeight: 800, color: '#047857', margin: 0 }}>
+                        ✨ Tuesday, 09:00, Database Lecture, 2 hours, room 301. (Added via Voice)
                       </p>
-                      <div style={{ display: 'flex', gap: 8 }}>
-                        <button style={{ padding: '6px 14px', borderRadius: 6, fontWeight: 700, background: '#10b981', color: '#fff', border: 'none' }}>Tandai Selesai</button>
-                        <button style={{ padding: '6px 14px', borderRadius: 6, fontWeight: 700, background: '#e2e8f0', border: 'none' }}>Bacakan</button>
+                      <div style={{ display: 'flex', gap: 6 }}>
+                        <button style={{ padding: '6px 12px', borderRadius: 6, fontWeight: 700, fontSize: 13, background: '#10b981', color: '#fff', border: 'none' }}>Mark Done</button>
+                        <button style={{ padding: '6px 12px', borderRadius: 6, fontWeight: 700, fontSize: 13, background: '#e2e8f0', border: 'none' }}>Speak</button>
                       </div>
                     </motion.div>
                   )}
@@ -611,7 +628,7 @@ export const DemoApp: React.FC = () => {
               <div style={{
                 position: 'absolute',
                 top: -65,
-                left: -120,
+                left: -60,
                 width: 320,
                 background: 'rgba(15, 23, 42, 0.95)',
                 border: tapEffect.type === 'first' ? '2px solid #f59e0b' : '2px solid #10b981',
@@ -634,38 +651,38 @@ export const DemoApp: React.FC = () => {
               animate={{ opacity: 1, scale: 1, y: 0 }}
               style={{
                 position: 'absolute',
-                top: 260,
-                left: 100,
-                right: 100,
+                top: 250,
+                left: 60,
+                right: 60,
                 background: 'rgba(15, 23, 42, 0.96)',
                 border: '2px solid #ef4444',
                 borderRadius: 20,
-                padding: '24px 30px',
+                padding: '20px 24px',
                 boxShadow: '0 20px 60px rgba(239, 68, 68, 0.3)',
                 display: 'flex',
                 alignItems: 'center',
-                gap: 20,
+                gap: 16,
                 zIndex: 300
               }}
             >
               <div style={{
-                width: 50,
-                height: 50,
+                width: 46,
+                height: 46,
                 borderRadius: '50%',
                 background: '#ef4444',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                fontSize: 24,
+                fontSize: 22,
                 boxShadow: '0 0 20px #ef4444'
               }}>
                 🎤
               </div>
               <div>
-                <p style={{ fontSize: 13, fontWeight: 800, color: '#ef4444', textTransform: 'uppercase', letterSpacing: '0.1em', margin: 0 }}>
-                  MENDENGARKAN SUARA PENGGUNA...
+                <p style={{ fontSize: 12, fontWeight: 800, color: '#ef4444', textTransform: 'uppercase', letterSpacing: '0.1em', margin: 0 }}>
+                  LISTENING TO USER SPEECH...
                 </p>
-                <p style={{ fontSize: 22, fontWeight: 800, color: '#ffffff', margin: '6px 0 0' }}>
+                <p style={{ fontSize: 20, fontWeight: 800, color: '#ffffff', margin: '4px 0 0' }}>
                   "{voiceTypingText}"<span style={{ color: '#ef4444', animation: 'blink 0.8s infinite' }}>|</span>
                 </p>
               </div>
@@ -676,12 +693,12 @@ export const DemoApp: React.FC = () => {
         {/* AFTER EFFECTS FLOATING CALLOUT CARDS (Right Column) */}
         <div style={{
           position: 'absolute',
-          right: 60,
-          top: 120,
-          width: 420,
+          right: 50,
+          top: 110,
+          width: 440,
           display: 'flex',
           flexDirection: 'column',
-          gap: 20,
+          gap: 16,
           zIndex: 50
         }}>
           <AnimatePresence mode="wait">
@@ -692,11 +709,11 @@ export const DemoApp: React.FC = () => {
               exit={{ opacity: 0, x: -30, scale: 0.9 }}
               transition={{ type: 'spring', stiffness: 300, damping: 25 }}
               style={{
-                background: 'rgba(15, 23, 42, 0.75)',
+                background: 'rgba(15, 23, 42, 0.85)',
                 backdropFilter: 'blur(20px)',
                 border: `2px solid ${currentScene.accent}`,
                 borderRadius: 24,
-                padding: '28px',
+                padding: '24px 26px',
                 boxShadow: `0 20px 50px -10px ${currentScene.accent}33`
               }}
             >
@@ -709,14 +726,14 @@ export const DemoApp: React.FC = () => {
                 letterSpacing: '0.15em',
                 padding: '4px 12px',
                 borderRadius: 20,
-                marginBottom: 12
+                marginBottom: 10
               }}>
                 {currentScene.badge}
               </div>
-              <h2 style={{ fontSize: 24, fontWeight: 900, color: '#ffffff', lineHeight: 1.3, marginBottom: 10 }}>
+              <h2 style={{ fontSize: 22, fontWeight: 900, color: '#ffffff', lineHeight: 1.3, marginBottom: 8 }}>
                 {currentScene.title}
               </h2>
-              <p style={{ fontSize: 15, fontWeight: 500, color: '#94a3b8', lineHeight: 1.6, margin: 0 }}>
+              <p style={{ fontSize: 14, fontWeight: 500, color: '#94a3b8', lineHeight: 1.6, margin: 0 }}>
                 {currentScene.subtitle}
               </p>
             </motion.div>
@@ -728,7 +745,7 @@ export const DemoApp: React.FC = () => {
             backdropFilter: 'blur(10px)',
             border: '1px solid rgba(255, 255, 255, 0.1)',
             borderRadius: 20,
-            padding: '20px 24px',
+            padding: '18px 22px',
             display: 'flex',
             flexDirection: 'column',
             gap: 12
@@ -737,23 +754,23 @@ export const DemoApp: React.FC = () => {
               <span style={{ fontSize: 20 }}>♿</span>
               <div>
                 <p style={{ fontSize: 14, fontWeight: 800, color: '#38bdf8', margin: 0 }}>WCAG 2.2 Level AA</p>
-                <p style={{ fontSize: 12, color: '#64748b', margin: 0 }}>0 Pelanggaran Kritis axe-core</p>
+                <p style={{ fontSize: 12, color: '#64748b', margin: 0 }}>0 Critical axe-core Violations</p>
               </div>
             </div>
             <div style={{ height: 1, background: 'rgba(255,255,255,0.08)' }} />
             <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
               <span style={{ fontSize: 20 }}>📱</span>
               <div>
-                <p style={{ fontSize: 14, fontWeight: 800, color: '#10b981', margin: 0 }}>APK Native Android & PWA</p>
-                <p style={{ fontSize: 12, color: '#64748b', margin: 0 }}>12 MB Standalone Offline-First</p>
+                <p style={{ fontSize: 14, fontWeight: 800, color: '#10b981', margin: 0 }}>Native Android APK & PWA</p>
+                <p style={{ fontSize: 12, color: '#64748b', margin: 0 }}>33 MB Standalone Offline-First</p>
               </div>
             </div>
             <div style={{ height: 1, background: 'rgba(255,255,255,0.08)' }} />
             <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
               <span style={{ fontSize: 20 }}>⌨️</span>
               <div>
-                <p style={{ fontSize: 14, fontWeight: 800, color: '#f59e0b', margin: 0 }}>100% Bebas Mouse</p>
-                <p style={{ fontSize: 12, color: '#64748b', margin: 0 }}>Pintasan V, S, D, N, Esc, Tab</p>
+                <p style={{ fontSize: 14, fontWeight: 800, color: '#f59e0b', margin: 0 }}>100% Mouse-Free</p>
+                <p style={{ fontSize: 12, color: '#64748b', margin: 0 }}>Shortcuts V, S, D, N, Esc, Tab</p>
               </div>
             </div>
           </div>
@@ -776,7 +793,7 @@ export const DemoApp: React.FC = () => {
         padding: '0 60px',
         zIndex: 100
       }}>
-        {/* Kinetic Subtitles */}
+        {/* Kinetic Subtitles in English */}
         <div style={{ flex: 1, maxWidth: 1400, paddingRight: 40 }}>
           <p style={{
             fontSize: 20,
@@ -785,13 +802,13 @@ export const DemoApp: React.FC = () => {
             lineHeight: 1.5,
             margin: 0
           }}>
-            <span style={{ color: currentScene.accent, fontWeight: 900 }}>🎙️ Narator: </span>
-            {currentScene.id === 'scene1_intro' && 'Bagi jutaan penyandang disabilitas netra dan disleksia berat, kalender konvensional berbentuk kisi visual adalah labirin yang membingungkan. Inilah Read Aloud Planner: perencana harian cerdas yang bisa didengar, diajak bicara, dan dijelajahi dengan sentuhan aman.'}
-            {currentScene.id === 'scene2_zerologin' && 'Didesain tanpa hambatan, Read Aloud Planner menghapus total dinding login dan registrasi. Aplikasi langsung terbuka ke jadwal dan dapat digunakan luring seketika sejak detik pertama dibuka, lengkap dengan tema kontras tinggi.'}
-            {currentScene.id === 'scene3_doubletap' && 'Fitur revolusioner untuk tunanetra: Mode Bantuan Ketuk Ganda. Satu ketukan membacakan fungsi tombol tanpa salah pencet. Ketukan kedua secara cepat langsung menjalankan fiturnya.'}
-            {currentScene.id === 'scene4_voiceinput' && 'Menambah kegiatan kini semudah berbicara. Cukup tekan tombol suara dan ucapkan jadwal Anda secara alami. Sistem pengurai cerdas kami otomatis mengekstrak judul, jam, durasi, dan lokasi dalam sekejap.'}
-            {currentScene.id === 'scene5_linearfocus' && 'Setiap jadwal disusun dalam struktur kalimat linear utuh yang ramah screen reader. Tersedia pula Mode Fokus yang menampilkan satu kegiatan per layar untuk kenyamanan maksimal penyandang disleksia dan ADHD.'}
-            {currentScene.id === 'scene6_outro' && 'Read Aloud Planner telah lolos audit kepatuhan WCAG 2.2 Level AA dengan nol pelanggaran kritis, dan kini tersedia gratis sebagai Progressive Web App serta paket APK Android mandiri. Jadwal yang bisa didengar, bukan hanya dilihat.'}
+            <span style={{ color: currentScene.accent, fontWeight: 900 }}>🎙️ Narrator: </span>
+            {currentScene.id === 'scene1_intro' && 'For millions of blind and severely dyslexic individuals, conventional visual grid calendars are disorienting labyrinths. Introducing Read Aloud Planner: an accessible daily planner you can hear, speak to, and explore with safe touch interactions.'}
+            {currentScene.id === 'scene2_zerologin' && 'Designed without barriers, Read Aloud Planner completely eliminates login walls and registration forms. The application opens directly to your schedule and is immediately usable offline, featuring high contrast themes and disability-friendly focus indicators.'}
+            {currentScene.id === 'scene3_doubletap' && 'A revolutionary feature for visually impaired users: Two-Tap Blind Assist Mode. A single tap reads out the button\'s name and purpose aloud without accidental clicks. A quick second tap executes the action instantly.'}
+            {currentScene.id === 'scene4_voiceinput' && 'Adding tasks is now as effortless as speaking. Simply tap the voice button and speak your schedule naturally. Our smart natural language parser automatically extracts the title, time, duration, and room in seconds without typing a single character.'}
+            {currentScene.id === 'scene5_linearfocus' && 'Every schedule entry is structured as a complete linear sentence optimized for screen readers. Focus Mode presents one task at a time on screen for maximum comfort for individuals with dyslexia and ADHD.'}
+            {currentScene.id === 'scene6_outro' && 'Read Aloud Planner has passed automated WCAG 2.2 Level AA audits with zero critical violations, and is available for free as an installable Progressive Web App and standalone Android APK. A schedule you hear, not just see.'}
           </p>
         </div>
 
