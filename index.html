@@ -42,56 +42,14 @@
         </select>
         <a href="/help.html" class="nav-link">Panduan Aksesibilitas</a>
         <a href="/ReadAloudPlanner.apk" class="nav-link" download="ReadAloudPlanner.apk" aria-label="Unduh APK Android">Unduh APK</a>
+        <button type="button" id="btn-toggle-double-tap" aria-pressed="true" class="btn-secondary" aria-label="Bantuan Ketuk Ganda: Aktif">Ketuk Ganda: Aktif</button>
         <button type="button" id="btn-test-audio" class="btn-secondary" aria-label="Tes suara audio">Tes Suara</button>
-        <button type="button" id="btn-toggle-auth" class="btn-secondary" aria-label="Masuk atau kelola akun">Akun</button>
-        <button type="button" id="btn-logout" class="btn-secondary" style="display:none;">Keluar</button>
       </nav>
     </div>
   </header>
 
   <!-- Main Content Landmark -->
   <main id="main-content" role="main">
-    <!-- Auth Section (Collapsible Dialog Card) -->
-    <section id="auth-section" aria-labelledby="auth-heading" class="card" style="display:none;">
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-        <h2 id="auth-heading" style="margin: 0;">Masuk / Sinkronisasi Akun</h2>
-        <button type="button" id="btn-close-auth" class="btn-secondary">Tutup (<kbd>Esc</kbd>)</button>
-      </div>
-      
-      <!-- Login Form -->
-      <form id="form-login" novalidate>
-        <div class="form-group">
-          <label for="login-email">Alamat Email</label>
-          <input type="email" id="login-email" name="email" required autocomplete="email">
-        </div>
-        <div class="form-group">
-          <label for="login-password">Kata Sandi (minimal 12 karakter)</label>
-          <input type="password" id="login-password" name="password" required autocomplete="current-password">
-        </div>
-        <div class="button-row">
-          <button type="submit" class="btn-primary">Masuk</button>
-          <button type="button" id="btn-show-register" class="btn-secondary">Daftar Akun Baru</button>
-          <button type="button" id="btn-use-offline" class="btn-secondary">Gunakan Mode Lokal</button>
-        </div>
-      </form>
-
-      <!-- Register Form (Initially Hidden) -->
-      <form id="form-register" style="display:none;" novalidate>
-        <div class="form-group">
-          <label for="reg-email">Alamat Email Baru</label>
-          <input type="email" id="reg-email" name="reg-email" required autocomplete="email">
-        </div>
-        <div class="form-group">
-          <label for="reg-password">Kata Sandi Baru (minimal 12 karakter)</label>
-          <input type="password" id="reg-password" name="reg-password" required autocomplete="new-password">
-        </div>
-        <div class="button-row">
-          <button type="submit" class="btn-primary">Daftar Sekarang</button>
-          <button type="button" id="btn-show-login" class="btn-secondary">Kembali ke Masuk</button>
-        </div>
-      </form>
-    </section>
-
     <!-- Main Planner View (Directly Visible by default) -->
     <section id="planner-section" aria-labelledby="planner-heading">
       <div class="planner-toolbar">

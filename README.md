@@ -8,6 +8,11 @@
 
 ## Fitur Utama
 
+- 👆 **Mode Bantuan Ketuk Ganda (TalkBack / VoiceOver Style):** Khusus membantu penyandang tunanetra di perangkat layar sentuh maupun tetikus:
+  - **Ketuk 1 Kali:** Membacakan deskripsi fungsi tombol/elemen secara audio tanpa mengeksekusi (mencegah salah pencet).
+  - **Ketuk 2 Kali:** Mengaktifkan atau menjalankan fungsi tombol tersebut.
+  - Dapat diaktifkan/dinonaktifkan sewaktu-waktu melalui tombol di bilah navigasi.
+- 🔓 **Akses Langsung Tanpa Hambatan (100% Zero-Login):** Menghilangkan seluruh formulir login dan autentikasi yang membebani pengguna tunanetra; aplikasi langsung terbuka ke jadwal dan siap pakai seketika.
 - 🎤 **Input Suara Cerdas (Speech-to-Text):** Tambah jadwal tanpa mengetik cukup dengan berbicara secara alami (contoh: *"Kuliah Pemrograman besok jam 9 pagi 2 jam di lab 1"*). Sistem otomatis mengekstrak judul, tanggal, jam mulai, durasi, dan lokasi (Pintasan keyboard: <kbd>V</kbd>).
 - 🎙️ **Kalimat Linear Alami:** Menggantikan kisi kalender visual rumit dengan format kalimat terstruktur yang bermakna saat dibacakan (contoh: *"Senin, 08.00, Kuliah Basis Data, 2 jam, ruang 301. Selesai."*).
 - 🔊 **Web Speech API & Web Audio Earcons:** Pembacaan suara berurutan di sisi klien dengan kontrol kecepatan (0.5x–2.0x), pemilihan suara otomatis, audio unlock untuk mobile Safari/Chrome, serta umpan balik nada sintetis (*audio earcons*).

@@ -2,6 +2,7 @@ import { announce } from './a11y.js';
 import { SpeechCoordinator } from './speech.js';
 import { LocalStorageRepository, type ActivityItem } from './storage.js';
 import { VoiceInputController } from './voice_input.js';
+import { DoubleTapManager } from './double_tap_assist.js';
 
 export function playEarcon(type: 'tap' | 'success' | 'warning' | 'alert') {
   try {
@@ -74,29 +75,13 @@ function unlockAudio() {
 const storageRepo = new LocalStorageRepository();
 const speech = new SpeechCoordinator();
 const voiceInput = new VoiceInputController();
+const doubleTap = new DoubleTapManager(true); // Active by default for blind/assistive users
 
 let currentActivities: ActivityItem[] = [];
 let focusIndex = 0;
 let isReadingAll = false;
 let fontSizeStep = 0; // 0: standard (18px), 1: large (22px), 2: xlarge (26px)
 let pendingDeleteId: string | null = null;
-
-async function checkSession(): Promise<void> {
-  try {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 1200);
-    const res = await fetch('/api/auth/me', { signal: controller.signal });
-    clearTimeout(timeoutId);
-
-    if (res.ok) {
-      const btnLogout = document.getElementById('btn-logout');
-      if (btnLogout) btnLogout.style.display = 'inline-block';
-    }
-  } catch {
-    // Running in local/offline mode
-  }
-  await loadActivities();
-}
 
 async function loadActivities(targetDate?: string): Promise<void> {
   const dateInput = document.getElementById('input-date') as HTMLInputElement | null;
@@ -109,7 +94,7 @@ async function loadActivities(targetDate?: string): Promise<void> {
 
   try {
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 1200);
+    const timeoutId = setTimeout(() => controller.abort(), 1000);
     const res = await fetch(`/api/activities?date=${date}`, { signal: controller.signal });
     clearTimeout(timeoutId);
 
@@ -371,11 +356,6 @@ window.addEventListener('keydown', (e) => {
       pendingDeleteId = null;
       return;
     }
-
-    const authSection = document.getElementById('auth-section');
-    if (authSection && authSection.style.display !== 'none') {
-      authSection.style.display = 'none';
-    }
   }
 });
 
@@ -384,7 +364,43 @@ document.addEventListener('DOMContentLoaded', () => {
   document.addEventListener('click', unlockAudio, { once: true });
   document.addEventListener('touchstart', unlockAudio, { once: true });
 
-  checkSession();
+  // Direct load of activities on start
+  loadActivities();
+
+  // Two-Click / Double-Tap Interceptor for Visually Impaired Assistance
+  document.addEventListener('click', (e) => {
+    unlockAudio();
+    if (!doubleTap.isEnabled()) return;
+
+    // Allow keyboard Enter/Space (e.detail === 0) to execute directly for keyboard users
+    if (e.detail === 0) return;
+
+    // Find closest interactive element
+    const target = (e.target as HTMLElement).closest(
+      'button, a, .activity-linear-item'
+    ) as HTMLElement | null;
+
+    if (!target) return;
+
+    // Let the toggle button itself activate on 1 click
+    if (target.id === 'btn-toggle-double-tap') return;
+
+    const res = doubleTap.handleClick(target, () => {
+      // Second tap proceeds with actual action
+    });
+
+    if (!res.shouldExecute) {
+      e.preventDefault();
+      e.stopPropagation();
+      playEarcon('tap');
+      speech.speak(res.announcement);
+      const captionEl = document.getElementById('speech-caption-text');
+      if (captionEl) {
+        captionEl.textContent = res.announcement;
+      }
+      announce(res.announcement);
+    }
+  }, true);
 
   // Register Service Worker
   if ('serviceWorker' in navigator) {
@@ -394,6 +410,25 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     });
   }
+
+  // Double-Tap Assist Toggle Button
+  const btnToggleDT = document.getElementById('btn-toggle-double-tap');
+  btnToggleDT?.addEventListener('click', () => {
+    const newState = !doubleTap.isEnabled();
+    doubleTap.setEnabled(newState);
+    btnToggleDT.setAttribute('aria-pressed', String(newState));
+    btnToggleDT.textContent = newState ? 'Ketuk Ganda: Aktif' : 'Ketuk Ganda: Nonaktif';
+    btnToggleDT.setAttribute(
+      'aria-label',
+      newState ? 'Bantuan Ketuk Ganda: Aktif, klik untuk nonaktifkan' : 'Bantuan Ketuk Ganda: Nonaktif, klik untuk aktifkan'
+    );
+    playEarcon(newState ? 'success' : 'tap');
+    const msg = newState
+      ? 'Bantuan ketuk ganda diaktifkan. Klik sekali untuk mendengar fungsi, klik dua kali untuk menjalankan.'
+      : 'Bantuan ketuk ganda dinonaktifkan. Mode satu klik aktif.';
+    speech.speak(msg);
+    announce(msg);
+  });
 
   // Voice Add Button
   document.getElementById('btn-voice-add')?.addEventListener('click', () => {
@@ -421,117 +456,6 @@ document.addEventListener('DOMContentLoaded', () => {
       captionEl.textContent = 'Audio dan suara berfungsi dengan baik. Read Aloud Planner siap membacakan jadwal Anda.';
     }
     announce('Audio dan suara berfungsi normal.');
-  });
-
-  // Auth Toggle & Close Buttons
-  document.getElementById('btn-toggle-auth')?.addEventListener('click', () => {
-    const authSec = document.getElementById('auth-section');
-    if (authSec) {
-      const isHidden = authSec.style.display === 'none';
-      authSec.style.display = isHidden ? 'block' : 'none';
-      if (isHidden) {
-        document.getElementById('login-email')?.focus();
-      }
-    }
-  });
-
-  document.getElementById('btn-close-auth')?.addEventListener('click', () => {
-    const authSec = document.getElementById('auth-section');
-    if (authSec) authSec.style.display = 'none';
-  });
-
-  document.getElementById('btn-use-offline')?.addEventListener('click', () => {
-    const authSec = document.getElementById('auth-section');
-    if (authSec) authSec.style.display = 'none';
-    announce('Mode lokal aktif.');
-  });
-
-  // Auth Forms
-  const formLogin = document.getElementById('form-login') as HTMLFormElement | null;
-  formLogin?.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const email = (document.getElementById('login-email') as HTMLInputElement).value;
-    const password = (document.getElementById('login-password') as HTMLInputElement).value;
-
-    try {
-      const res = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password })
-      });
-
-      if (res.ok) {
-        playEarcon('success');
-        announce('Login berhasil.');
-        const authSec = document.getElementById('auth-section');
-        if (authSec) authSec.style.display = 'none';
-        const btnLogout = document.getElementById('btn-logout');
-        if (btnLogout) btnLogout.style.display = 'inline-block';
-        loadActivities();
-      } else {
-        const data = await res.json().catch(() => ({}));
-        playEarcon('alert');
-        announce(data.error || 'Login gagal.', 'assertive');
-      }
-    } catch {
-      playEarcon('alert');
-      announce('Server akun tidak terjangkau. Menggunakan data lokal.', 'assertive');
-    }
-  });
-
-  const formRegister = document.getElementById('form-register') as HTMLFormElement | null;
-  formRegister?.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const email = (document.getElementById('reg-email') as HTMLInputElement).value;
-    const password = (document.getElementById('reg-password') as HTMLInputElement).value;
-
-    try {
-      const res = await fetch('/api/auth/register', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password })
-      });
-
-      if (res.ok) {
-        playEarcon('success');
-        announce('Registrasi berhasil. Silakan masuk.');
-        if (formRegister) formRegister.style.display = 'none';
-        if (formLogin) formLogin.style.display = 'block';
-      } else {
-        const data = await res.json().catch(() => ({}));
-        playEarcon('alert');
-        announce(data.error || 'Registrasi gagal.', 'assertive');
-      }
-    } catch {
-      playEarcon('alert');
-      announce('Server akun tidak terjangkau.', 'assertive');
-    }
-  });
-
-  document.getElementById('btn-show-register')?.addEventListener('click', () => {
-    if (formLogin) formLogin.style.display = 'none';
-    if (formRegister) formRegister.style.display = 'block';
-    const regEmail = document.getElementById('reg-email');
-    if (regEmail) regEmail.focus();
-  });
-
-  document.getElementById('btn-show-login')?.addEventListener('click', () => {
-    if (formRegister) formRegister.style.display = 'none';
-    if (formLogin) formLogin.style.display = 'block';
-    const loginEmail = document.getElementById('login-email');
-    if (loginEmail) loginEmail.focus();
-  });
-
-  document.getElementById('btn-logout')?.addEventListener('click', async () => {
-    try {
-      await fetch('/api/auth/logout', { method: 'POST' });
-    } catch {
-      // Ignore
-    }
-    const btnLogout = document.getElementById('btn-logout');
-    if (btnLogout) btnLogout.style.display = 'none';
-    playEarcon('tap');
-    announce('Anda telah keluar.');
   });
 
   // Date picker

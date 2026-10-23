@@ -37,11 +37,17 @@ test.describe('Keyboard-Only Workflow Verification', () => {
     await expect(dialog).not.toBeVisible();
   });
 
-  test('test audio button plays audio test and updates status', async ({ page }) => {
+  test('single click announces description and double click executes function', async ({ page }) => {
     await page.goto('/');
     const testAudioBtn = page.locator('#btn-test-audio');
+
+    // 1st click: announces what the button does without executing
     await testAudioBtn.click();
     const caption = page.locator('#speech-caption-text');
+    await expect(caption).toContainText('Tombol Tes Suara');
+
+    // 2nd click: executes the feature
+    await testAudioBtn.click();
     await expect(caption).toContainText('Audio dan suara berfungsi dengan baik');
   });
 });
