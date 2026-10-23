@@ -50,6 +50,9 @@ export function getAccessibleDescription(el: HTMLElement): string {
     if (el.getAttribute('href')?.includes('ReadAloudPlanner.apk')) {
       return 'Tautan Unduh APK Android. Ketuk dua kali untuk mengunduh aplikasi instalasi Android.';
     }
+    if (el.getAttribute('href')?.includes('ReadAloudPlanner_Demo_Video.mp4')) {
+      return 'Tautan Video Demo Produk. Ketuk dua kali untuk memutar video demo resmi aplikasi.';
+    }
     if (el.getAttribute('href')?.includes('help.html') || el.getAttribute('href') === '/') {
       return `Tautan ${text || ariaLabel}. Ketuk dua kali untuk membuka halaman.`;
     }

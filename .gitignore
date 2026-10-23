@@ -6,3 +6,5 @@ dist-frontend/
 .playwright-report/
 test-results/
 .vercel
+demo_video/recordings/
+demo_video/audio/*_raw.mp3

@@ -17,6 +17,7 @@
 - 🎙️ **Kalimat Linear Alami:** Menggantikan kisi kalender visual rumit dengan format kalimat terstruktur yang bermakna saat dibacakan (contoh: *"Senin, 08.00, Kuliah Basis Data, 2 jam, ruang 301. Selesai."*).
 - 🔊 **Web Speech API & Web Audio Earcons:** Pembacaan suara berurutan di sisi klien dengan kontrol kecepatan (0.5x–2.0x), pemilihan suara otomatis, audio unlock untuk mobile Safari/Chrome, serta umpan balik nada sintetis (*audio earcons*).
 - 💾 **Penyimpanan Offline-First:** Jadwal langsung tersimpan secara lokal (`localStorage`) dan dapat digunakan tanpa login maupun saat offline, serta otomatis tersinkronisasi jika akun backend tersedia.
+- 🎬 **Video Demo Showcase (1080p 60fps):** Video demo beranimasi After Effects-style via Framer Motion yang mendemonstrasikan seluruh fitur inti: input suara, ketuk ganda tunanetra, mode fokus, dan pembacaan linear audio: [Tonton Video Demo](https://taskforge-sooty.vercel.app/ReadAloudPlanner_Demo_Video.mp4).
 - 🎯 **Mode Fokus (Satu Layar Satu Kegiatan):** Mengurangi *cognitive overload* dengan memfokuskan antarmuka pada satu kegiatan aktif beserta kontrol audio otomatis.
 - ⌨️ **Navigasi 100% Bebas Tetikus (Keyboard-Only):**
   - `V` — Mulai input suara untuk menambah kegiatan baru.
